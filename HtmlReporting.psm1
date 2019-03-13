@@ -327,7 +327,14 @@ Function Get-HtmlText
     End
     {
         $functionHash = @{}
-        foreach ($private:t in 'h1', 'h2', 'h3', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em')
+        
+        $otherParameters = @{}
+        $otherParameters['a'] = ",`r`n[Parameter()] [string] `$Name,`r`n[Parameter()] [string] `$Href"
+
+        $otherLines = @{}
+        $otherLines['a'] = "if (`$Name) { `$otherList += ""name='`$Name`'"" }", "if (`$Href) { `$otherList += ""href='`$Href`'"" }"
+
+        foreach ($private:t in 'h1', 'h2', 'h3', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a')
         {
             $functionHash[$t] = [ScriptBlock]::Create("
             [CmdletBinding(PositionalBinding=`$false)]
@@ -335,16 +342,19 @@ Function Get-HtmlText
             (
                 [Parameter(ValueFromRemainingArguments=`$true)] [object[]] `$Definition,
                 [Parameter()] [string[]] `$Class,
-                [Parameter()] [string[]] `$Style
+                [Parameter()] [string[]] `$Style$($otherParameters[$t])
             )
-            `$classCode = ''
-            if (`$Class) { `$classCode = "" class='`$(`$Class -join ' ')'"" }
-            if (`$Style) { `$styleCode = "" style='`$(`$Style -join ' ')'"" }
+            `$otherList = @()
+            if (`$Class) { `$otherList += ""class='`$(`$Class -join ' ')'"" }
+            if (`$Style) { `$otherList += ""style='`$(`$Style -join ' ')'"" }
+            $($otherLines[$t] -join "`r`n")
+            `$otherCode = ''
+            if (`$otherList) { `$otherCode = "" `$(`$otherList -join ' ')"" }
             `$text = foreach (`$item in `$Definition)
             {
                 if (`$item -is [scriptblock]) { & `$item } else { `$item }
             }
-            ""<$t`$classCode`$styleCode>"", (`$text -join ' '), ""</$t>`r`n"" -join ''")
+            ""<$t`$otherCode>"", (`$text -join ' '), ""</$t>`r`n"" -join ''")
         }
 
         $Definiton.InvokeWithContext($functionHash, $null, $null) -join ''
