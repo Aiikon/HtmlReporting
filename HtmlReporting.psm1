@@ -107,7 +107,7 @@ Function ConvertTo-HtmlTable
         $headerList = New-Object System.Collections.Generic.List[string]
         if (-not $Property)
         {
-            $Property = $objectList[0].PSObject.Properties.Name
+            $Property = $inputObjectList[0].PSObject.Properties.Name
         }
 
         $Property | ForEach-Object { $headerList.Add($_) }
