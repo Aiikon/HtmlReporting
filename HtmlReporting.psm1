@@ -665,7 +665,7 @@ Function Out-HtmlFile
         if (-not $FilePath)
         {
             $tempDirectory = [System.IO.Path]::GetTempPath() + "HtmlReporting\"
-            [void][System.IO.Directory]::CreateDirectory($rootDirectory)
+            [void][System.IO.Directory]::CreateDirectory($tempDirectory)
             if (!$Script:CleanedUpTempFiles)
             {
                 Get-ChildItem $tempDirectory |
@@ -674,7 +674,7 @@ Function Out-HtmlFile
                     ForEach-Object { [System.IO.File]::Delete($_.FullName) }
                 $Script:CleanedUpTempFiles = $true
             }
-            $FilePath = $rootDirectory + [DateTime]::Now.ToString("yyyy.MM.dd-HH.mm.ss-ffff") + ".html"
+            $FilePath = $tempDirectory + [DateTime]::Now.ToString("yyyy.MM.dd-HH.mm.ss-ffff") + ".html"
         }
         else
         {
