@@ -89,8 +89,10 @@ NestedModules = @('HtmlReporting.psm1')
 FunctionsToExport = @(
     'ConvertTo-HtmlTable',
     'ConvertFrom-HtmlTable',
+    'Get-HtmlEncodedText',
+    'Get-HtmlIndicatorText',
     'Convert-PSCodeToHtml',
-    'Get-HtmlText',
+    'Get-HtmlFragment',
     'Get-HtmlFullDocument',
     'Out-HtmlFile'
 )

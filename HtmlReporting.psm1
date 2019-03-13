@@ -16,13 +16,17 @@ span.title {
 }
 h1 {
     font-weight: bold;
-    font-size: 15pt;
+    font-size: 22pt;    
 }
 h2 {
     font-weight: bold;
-    font-size: 13.5pt;
+    font-size: 15pt;
 }
 h3 {
+    font-weight: bold;
+    font-size: 13.5pt;
+}
+h4 {
     font-weight: bold;
     font-size: 12pt;
 }
@@ -57,6 +61,25 @@ table.HtmlReportingTable th.nowrap {
 }
 table.HtmlReportingTable .ralign {
     text-align: right;
+}
+
+.IndicatorText {
+    color: white;
+    padding: 1px 6px 1px 6px;
+    border-radius: 5px;
+    display: inline-block;
+    white-space: nowrap;
+    margin: 1px 1px 1px 1px;
+}
+
+.IndicatorTextBorder {
+    padding: 0px 5px 0px 5px;
+    border-style: solid;
+    border-thickness: 1.5px;
+    border-radius: 5px;
+    display: inline-block;
+    white-space: nowrap;
+    margin: 1px 1px 1px 1px;
 }
 
 .red {
@@ -318,46 +341,103 @@ Function ConvertFrom-HtmlTable
     }
 }
 
-Function Get-HtmlText
+Function Get-HtmlEncodedText
 {
     Param
     (
-        [Parameter(Position=0)] [scriptblock] $Definiton
+        [Parameter(Position=0,ValueFromPipeline=$true)] [string] $Text,
+        [Parameter()] [switch] $KeepWhitespace
+    )
+    Process
+    {
+        $Text = [System.Web.HttpUtility]::HtmlEncode($Text)
+        if ($KeepWhitespace) { $Text = $Text.Replace(' ', '&nbsp;') }
+        $Text
+    }
+}
+
+Function Get-HtmlReportColor
+{
+    Param
+    (
+        [Parameter(Mandatory=$true, Position=0, ParameterSetName='ByIndex')] [int] $Index,
+        [Parameter(Mandatory=$true, Position=0, ParameterSetName='ByColor')]
+            [ValidateSet('Blue', 'Orange', 'Red', 'Green', 'Purple', 'SeaBlue', 'SkyBlue',
+                'Teal', 'DarkGreen', 'LightOrange', 'Salmon', 'DarkRed', 'LightPurple',
+                'Brown', 'Tan')]
+            [string] $Name,
+        [Parameter()] [switch] $AssCssRGB
     )
     End
     {
-        $functionHash = @{}
-        
-        $otherParameters = @{}
-        $otherParameters['a'] = ",`r`n[Parameter()] [string] `$Name,`r`n[Parameter()] [string] `$Href"
-
-        $otherLines = @{}
-        $otherLines['a'] = "if (`$Name) { `$otherList += ""name='`$Name`'"" }", "if (`$Href) { `$otherList += ""href='`$Href`'"" }"
-
-        foreach ($private:t in 'h1', 'h2', 'h3', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a')
+        if ($Index -gt 14) { $Index = $Index % 15 }
+        if (!$Script:ReportColorIndices)
         {
-            $functionHash[$t] = [ScriptBlock]::Create("
-            [CmdletBinding(PositionalBinding=`$false)]
-            Param
-            (
-                [Parameter(ValueFromRemainingArguments=`$true)] [object[]] `$Definition,
-                [Parameter()] [string[]] `$Class,
-                [Parameter()] [string[]] `$Style$($otherParameters[$t])
-            )
-            `$otherList = @()
-            if (`$Class) { `$otherList += ""class='`$(`$Class -join ' ')'"" }
-            if (`$Style) { `$otherList += ""style='`$(`$Style -join ' ')'"" }
-            $($otherLines[$t] -join "`r`n")
-            `$otherCode = ''
-            if (`$otherList) { `$otherCode = "" `$(`$otherList -join ' ')"" }
-            `$text = foreach (`$item in `$Definition)
-            {
-                if (`$item -is [scriptblock]) { & `$item } else { `$item }
-            }
-            ""<$t`$otherCode>"", (`$text -join ' '), ""</$t>`r`n"" -join ''")
-        }
+            $Script:ReportColorIndices = [Array]::CreateInstance([int[]], 15)
+            $Script:ReportColorIndices[0] = 67, 134, 216
+            $Script:ReportColorIndices[1] = 255, 154, 46
+            $Script:ReportColorIndices[2] = 219, 68, 63
+            $Script:ReportColorIndices[3] = 168, 212, 79
+            $Script:ReportColorIndices[4] = 133, 96, 179
+            $Script:ReportColorIndices[5] = 60, 191, 227
+            $Script:ReportColorIndices[6] = 175, 216, 248
+            $Script:ReportColorIndices[7] = 0, 142, 142
+            $Script:ReportColorIndices[8] = 139, 186, 0
+            $Script:ReportColorIndices[9] = 250, 189, 15
+            $Script:ReportColorIndices[10] = 250, 110, 70
+            $Script:ReportColorIndices[11] = 157, 8, 13
+            $Script:ReportColorIndices[12] = 161, 134, 190
+            $Script:ReportColorIndices[13] = 204, 102, 0
+            $Script:ReportColorIndices[14] = 253, 198, 137
 
-        $Definiton.InvokeWithContext($functionHash, $null, $null) -join ''
+            $Script:ReportColorNameToIndex = @{}
+            $i = 0
+            foreach ($color in 'Blue', 'Orange', 'Red', 'Green', 'Purple', 'SeaBlue', 'SkyBlue',
+                'Teal', 'DarkGreen', 'LightOrange', 'Salmon', 'DarkRed', 'LightPurple',
+                'Brown', 'Tan')
+            {
+                $Script:ReportColorNameToIndex[$color] = $i++
+            }
+        }
+        if ($Name) { $Index = $Script:ReportColorNameToIndex[$Name] }
+        $rgb = $Script:ReportColorIndices[$Index]
+        if ($AssCssRGB) { "rgb($($rgb -join ','))" }
+        else { $rgb }
+    }
+}
+
+Function Get-HtmlIndicatorText
+{
+    Param
+    (
+        [Parameter(Mandatory=$true, Position=0)] [string] $Text,
+        [Parameter()] [switch] $TextIsHtml,
+        [Parameter(Mandatory=$true, ParameterSetName='ByRGB')] [ValidateCount(3,3)] [int[]] $ColorRGB,
+        [Parameter(Mandatory=$true, ParameterSetName='ByIndex')] [int] $ColorIndex,
+        [Parameter(Mandatory=$true, ParameterSetName='ByColor')]
+            [ValidateSet('Blue', 'Orange', 'Red', 'Green', 'Purple', 'SeaBlue', 'SkyBlue',
+                'Teal', 'DarkGreen', 'LightOrange', 'Salmon', 'DarkRed', 'LightPurple',
+                'Brown', 'Tan')]
+            [string] $ColorName,
+        [Parameter()] [switch] $BorderOnly,
+        [Parameter()] [string] $Width
+    )
+    End
+    {
+        if ($ColorName) { $ColorRGB = Get-HtmlReportColor -Name $ColorName }
+        elseif ($PSCmdlet.ParameterSetName -eq 'ByIndex') { $ColorRGB = Get-HtmlReportColor -Index $ColorIndex }
+        $colorCss = "rgb($($ColorRGB -join ','))"
+        $widthCss = ''
+        if ($Width) { $widthCss = "width:$Width;text-align:center;" }
+        if (!$TextIsHtml) { $Text = Get-HtmlEncodedText $Text }
+        if ($BorderOnly)
+        {
+            "<span class='IndicatorTextBorder' style='border-color:$colorCss;$widthCss'>$Text</span>"
+        }
+        else
+        {
+            "<span class='IndicatorText' style='background:$colorCss;$widthCss'>$Text</span>"
+        }
     }
 }
 
@@ -488,6 +568,49 @@ Function Convert-PSCodeToHtml
     }
 }
 
+Function Get-HtmlFragment
+{
+    Param
+    (
+        [Parameter(Position=0)] [scriptblock] $Definiton
+    )
+    End
+    {
+        $functionHash = @{}
+        
+        $otherParameters = @{}
+        $otherParameters['a'] = ",`r`n[Parameter()] [string] `$Name,`r`n[Parameter()] [string] `$Href"
+
+        $otherLines = @{}
+        $otherLines['a'] = "if (`$Name) { `$otherList += ""name='`$Name`'"" }", "if (`$Href) { `$otherList += ""href='`$Href`'"" }"
+
+        foreach ($private:t in 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a')
+        {
+            $functionHash[$t] = [ScriptBlock]::Create("
+            [CmdletBinding(PositionalBinding=`$false)]
+            Param
+            (
+                [Parameter(ValueFromRemainingArguments=`$true)] [object[]] `$Definition,
+                [Parameter()] [string[]] `$Class,
+                [Parameter()] [string[]] `$Style$($otherParameters[$t])
+            )
+            `$otherList = @()
+            if (`$Class) { `$otherList += ""class='`$(`$Class -join ' ')'"" }
+            if (`$Style) { `$otherList += ""style='`$(`$Style -join ' ')'"" }
+            $($otherLines[$t] -join "`r`n")
+            `$otherCode = ''
+            if (`$otherList) { `$otherCode = "" `$(`$otherList -join ' ')"" }
+            `$text = foreach (`$item in `$Definition)
+            {
+                if (`$item -is [scriptblock]) { & `$item } else { `$item }
+            }
+            ""<$t`$otherCode>"", (`$text -join ' '), ""</$t>`r`n"" -join ''")
+        }
+
+        $Definiton.InvokeWithContext($functionHash, $null, $null) -join ''
+    }
+}
+
 Function Get-HtmlFullDocument
 {
     Param
@@ -541,7 +664,17 @@ Function Out-HtmlFile
 
         if (-not $FilePath)
         {
-            $FilePath = [System.IO.Path]::GetTempPath() + [DateTime]::Now.ToString("yyyy.MM.dd-HH.mm.ss-ffff") + ".html"
+            $tempDirectory = [System.IO.Path]::GetTempPath() + "HtmlReporting\"
+            [void][System.IO.Directory]::CreateDirectory($rootDirectory)
+            if (!$Script:CleanedUpTempFiles)
+            {
+                Get-ChildItem $tempDirectory |
+                    Where-Object LastWriteTime -lt (Get-Date).AddDays(-2) |
+                    Where-Object Name -Match "\A\d{4}.*\.html" |
+                    ForEach-Object { [System.IO.File]::Delete($_.FullName) }
+                $Script:CleanedUpTempFiles = $true
+            }
+            $FilePath = $rootDirectory + [DateTime]::Now.ToString("yyyy.MM.dd-HH.mm.ss-ffff") + ".html"
         }
         else
         {
