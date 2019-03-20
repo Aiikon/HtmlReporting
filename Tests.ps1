@@ -5,15 +5,22 @@ $someVariable = "abcdefg"
 Get-HtmlFragment {
     
     h1 "Semi-Fancy Get-HtmlText Usage"
-
+    p "Paragraph"
+    p "Paragraph"
     h2 "Header 2"
+    p "Paragraph"
+    p "Paragraph"
     h3 "Header 3"
+    p "Paragraph"
+    p "Paragraph"
     h4 "Header 4"
+    p "Paragraph"
+    p "Paragraph"
     
     $header3 = "Header Three"
     h3 $header3
     
-    p "Here's a sample paragraph"
+    p "Here's a sample paragraph" (br) "And a line break"
     p "Here's a sample paragraph with some" (strong strong) "text"
     p "Some" (em (strong "strong and emphasized")) "text"
     p "And making use of `$someVariable: $someVariable"
@@ -53,6 +60,21 @@ Get-HtmlFragment {
         p {
             Convert-PSCodeToHtml -PsCode "Get-ChildItem C:\ | Out-GridView -Title `$var1"
         }
+    }
+
+    h2 ConvertTo-HtmlStrongText
+
+    $modes = 'SameLine', 'MultiLine', 'MultiLineIndent', 'MultiLineHorizontal', 'MultiLineIndentHorizontal'
+    $i = 0
+    foreach ($mode in $modes)
+    {
+        h3 $mode
+
+        Get-Service |
+            Select-Object -First 1 -Skip $i -Property Name, DisplayName, Status |
+            ConvertTo-HtmlStrongText -Mode $mode
+
+        $i += 1
     }
 
 } |
