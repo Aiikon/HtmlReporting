@@ -266,6 +266,50 @@ Function ConvertTo-HtmlTable
     }
 }
 
+Function ConvertTo-HtmlStrongText
+{
+    Param
+    (
+        [Parameter(ValueFromPipeline=$true, Position=0)] [object] $InputObject,
+        [Parameter()] [ValidateSet('SameLine', 'MultiLine', 'MultiLineIndent', 'MultiLineHorizontal', 'MultiLineIndentHorizontal')] [string] $Mode = 'MultiLine',
+        [Parameter()] [switch] $NoEmptyValues,
+        [Parameter()] [string[]] $HtmlProperty
+    )
+    Process
+    {
+        if (!$InputObject) { return }
+        $blockList = foreach ($property in $InputObject.PSObject.Properties)
+        {
+            $name = Get-HtmlEncodedText $property.Name
+            $value = $property.Value
+            if ($NoEmptyValues.IsPresent -and [String]::IsNullOrWhiteSpace($value)) { continue }
+            if ($name -notin $HtmlProperty) { $value = Get-HtmlEncodedText $value -InsertBr }
+            
+            if ($Mode -eq "SameLine")
+            {
+                $block = "<strong>${name}:</strong> $value"
+            }
+            elseif ($Mode -in "MultiLine", "MultiLineHorizontal")
+            {
+                $block = "<p><strong>$name</strong></br>$value</p>"
+            }
+            elseif ($Mode -in "MultiLineIndent", "MultiLineIndentHorizontal")
+            {
+                $block = "<p><strong>$name</strong></br><span style='margin-left:1em;'>$value</span></p>"
+            }
+
+            if ($Mode -in "MultiLineHorizontal", "MultiLineIndentHorizontal")
+            {
+                "<div style='display:inline-block; margin-right:2em;'>$block</div>"
+            }
+            else { $block }
+        }
+
+        if ($Mode -eq "SameLine") { return "<p>$($blockList -join "<br />")</p>" }
+        $blockList -join "`r`n"
+    }
+}
+
 Function Expand-XmlText
 {
     Param
