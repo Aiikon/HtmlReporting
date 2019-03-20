@@ -354,12 +354,14 @@ Function Get-HtmlEncodedText
     Param
     (
         [Parameter(Position=0,ValueFromPipeline=$true)] [string] $Text,
-        [Parameter()] [switch] $KeepWhitespace
+        [Parameter()] [switch] $KeepWhitespace,
+        [Parameter()] [switch] $InsertBr
     )
     Process
     {
         $Text = [System.Web.HttpUtility]::HtmlEncode($Text)
         if ($KeepWhitespace) { $Text = $Text.Replace(' ', '&nbsp;') }
+        if ($InsertBr) { $Text = $Text.Replace("`r`n", "<br />") }
         $Text
     }
 }
@@ -456,7 +458,7 @@ Function Get-HtmlIndicatorText
         $colorCss = "rgb($($ColorRGB -join ','))"
         $widthCss = ''
         if ($Width) { $widthCss = "width:$Width;text-align:center;" }
-        if (!$TextIsHtml) { $Text = Get-HtmlEncodedText $Text }
+        if (!$TextIsHtml) { $Text = Get-HtmlEncodedText $Text -InsertBr }
         if ($BorderOnly)
         {
             "<span class='IndicatorTextBorder' style='border-color:$colorCss;$widthCss'>$Text</span>"
