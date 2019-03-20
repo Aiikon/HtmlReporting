@@ -77,6 +77,12 @@ Get-HtmlFragment {
         $i += 1
     }
 
+
+    h2 ConvertTo-HtmlColorBlocks
+
+    Get-Service | Select-Object -First 5 Name, DisplayName, Status, StartType |
+        ConvertTo-HtmlColorBlocks -TocProperty Name -OutputScript { $_ | ConvertTo-HtmlStrongText }
+
 } |
     Out-HtmlFile -AddTimestamp
 
