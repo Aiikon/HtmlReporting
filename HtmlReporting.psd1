@@ -90,6 +90,7 @@ FunctionsToExport = @(
     'ConvertTo-HtmlTable',
     'ConvertFrom-HtmlTable',
     'Get-HtmlEncodedText',
+    'Get-HtmlImgTag',
     'Get-HtmlIndicatorText',
     'Convert-PSCodeToHtml',
     'Get-HtmlFragment',

@@ -406,6 +406,25 @@ Function Get-HtmlReportColor
     }
 }
 
+Function Get-HtmlImgTag
+{
+    Param
+    (
+        [Parameter(Mandatory=$true, Position=0, ParameterSetName='FilePath')] [string] $FilePath,
+        [Parameter(Mandatory=$true, ParameterSetName='Bytes')] [byte[]] $Bytes
+    )
+    End
+    {
+        if ($FilePath)
+        {
+            $extension = [System.IO.Path]::GetExtension($FilePath)
+            $Bytes = [System.IO.File]::ReadAllBytes($FilePath)
+        }
+        $base64 = [Convert]::ToBase64String($Bytes)
+        "<img srv='data:image/$extension;base64,$base64' />"
+    }
+}
+
 Function Get-HtmlIndicatorText
 {
     Param
