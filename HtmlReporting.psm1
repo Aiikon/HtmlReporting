@@ -635,6 +635,7 @@ Function Get-HtmlFragment
             }
             ""<$t`$otherCode>"", (`$text -join ' '), ""</$t>`r`n"" -join ''")
         }
+        $functionHash['br'] = { "<br />" }
 
         $Definiton.InvokeWithContext($functionHash, $null, $null) -join ''
     }
