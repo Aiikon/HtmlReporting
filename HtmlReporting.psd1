@@ -21,7 +21,7 @@ GUID = '2e128b91-8623-4521-b3ab-5ce70cc83360'
 Author = 'Justin Coon'
 
 # Company or vendor of this module
-CompanyName = 'Unknown'
+CompanyName = 'N/A'
 
 # Copyright statement for this module
 Copyright = @'
@@ -90,6 +90,7 @@ FunctionsToExport = @(
     'ConvertTo-HtmlTable',
     'ConvertFrom-HtmlTable',
     'Get-HtmlEncodedText',
+    'Get-HtmlReportColor',
     'Get-HtmlImgTag',
     'Get-HtmlIndicatorText',
     'Convert-PSCodeToHtml',
