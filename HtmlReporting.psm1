@@ -107,6 +107,61 @@ table.HtmlReportingTable .ralign {
 }
 "@
 
+Function ConvertTo-HtmlColorBlocks
+{
+    Param
+    (
+        [Parameter(ValueFromPipeline=$true)] [object] $InputObject,
+        [Parameter(Position=0)] [ScriptBlock] $OutputScript,
+        [Parameter()] [string[]] $TocProperty,
+        [Parameter()] [string[]] $HtmlTocProperty,
+        [Parameter()] [string] $SectionProperty
+    )
+    Begin
+    {
+        $inputObjectList = New-Object System.Collections.Generic.List[Object]
+    }
+    Process
+    {
+        if ($InputObject) { $inputObjectList.Add($InputObject) }
+    }
+    End
+    {
+        if ($TocProperty)
+        {
+            $htmlPropertyList = & { $HtmlTocProperty; 'Link' } | Select-Object -Unique
+            $idList = New-Object System.Collections.Generic.List[string]
+            $inputObjectList |
+                Select-Object $TocProperty |
+                Set-PropertyValue Link {
+                    $id = [guid]::NewGuid().ToString('n')
+                    if ($SectionProperty) { $id = $InputObject.$SectionProperty }
+                    $idList.Add($id)
+                    "<a href='#$id'>Link</a>"
+                } |
+                ConvertTo-HtmlTable -HtmlProperty $htmlPropertyList
+            "<br /><br />"
+        }
+
+        $i = 0
+        foreach ($InputObject in $inputObjectList)
+        {
+            $html = $OutputScript.InvokeWithContext($null, (New-Object PSVariable "_", @($InputObject)), $null)
+            $color = Get-HtmlReportColor -Index $i -AssCssRGB
+            if ($TocProperty)
+            {
+                $id = $idList[$i]
+                "<a name='$id' />"
+            }
+            "<table style='margin-bottom:2em;'><tr><td style='background-color:$color; width:15px;'>&nbsp;</td>"
+            "<td style='padding-left:10px; page-break-inside:avoid;'>"
+            $html -join "`r`n"
+            "</td></tr></table>"
+            $i += 1
+        }
+    }
+}
+
 Function ConvertTo-HtmlTable
 {
     Param
