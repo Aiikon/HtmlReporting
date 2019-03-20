@@ -16,19 +16,27 @@ span.title {
 }
 h1 {
     font-weight: bold;
-    font-size: 22pt;    
+    font-size: 22pt;
+    margin: 0.6em 0em 0.6em 0em;
 }
 h2 {
     font-weight: bold;
     font-size: 15pt;
+    margin: 0.8em 0em 0.2em 0em;
 }
 h3 {
     font-weight: bold;
     font-size: 13.5pt;
+    margin: 0.6em 0em 0.1em 0em;
 }
 h4 {
     font-weight: bold;
     font-size: 12pt;
+    margin: 0.5em 0em 0.1em 0em;
+}
+p
+{
+    margin: 0.3em 0em 0.5em 0em;
 }
 
 table.HtmlReportingTable {
