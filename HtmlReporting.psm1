@@ -815,3 +815,93 @@ Function Out-HtmlFile
         & $FilePath
     }
 }
+
+Function Out-Outlook
+{
+    Param
+    (
+        [Parameter(ValueFromPipeline=$true)] [string] $Html,
+        [Parameter()] [string[]] $To,
+        [Parameter()] [string[]] $Cc,
+        [Parameter()] [string] $Subject,
+        [Parameter()] [switch] $SaveDraft,
+        [Parameter()] [switch] $Send,
+        [Parameter()] [switch] $AppendScript,
+        [Parameter()] [string[]] $Attachment
+    )
+    Begin
+    {
+        $lines = New-Object System.Collections.Generic.List[string]
+    }
+    Process
+    {
+        $lines.Add($Html)
+    }
+    End
+    {
+        trap { $PSCmdlet.ThrowTerminatingError($_) }
+
+        if ($SaveDraft -and $Send) { throw "SaveDraft and Send cannot be provided together." }
+
+        $outlook = [Runtime.Interopservices.Marshal]::GetActiveObject('Outlook.Application')
+        $mail = $outlook.CreateItem(0)
+
+        $html = Get-HtmlFullDocument -Html ($lines -join "`r`n")
+
+        if ($AppendScript.IsPresent)
+        {
+            $scriptText = Get-PSCallStack |
+                Select-Object -Last 1 |
+                ForEach-Object { $_.InvocationInfo.MyCommand.Definition } |
+                Out-String
+            $scriptHtml = "", "", "# $('='*80)", "# Generating Script", "# $('='*80)", "", $scriptText |
+                Convert-PSCodeToHtml
+
+            $html = $html.Replace('</body>', "$scriptHtml</body>")
+        }
+
+        $imgRegex = [regex]"(<img.+?src=')data:image/png;base64,(.+?)(' ?(:?usemap='.+?')? ?/>)"
+        $imgRegexMatchList = $imgRegex.Matches($html)
+
+        $olByValue = [Microsoft.Office.Interop.Outlook.OlAttachmentType]::olByValue
+        foreach ($imgRegexMatch in $imgRegexMatchList)
+        {
+            $imgBase64 = $imgRegexMatch.Captures[0].Groups[2].Value
+            $imgBytes = [Convert]::FromBase64String($imgBase64)
+            $tempFile = [System.IO.Path]::GetTempFileName()
+            [System.IO.File]::Delete($tempFile)
+            [System.IO.File]::WriteAllBytes("$tempFile.png", $imgBytes)
+            $fileName = [System.IO.Path]::GetFileName("$tempFile.png")
+            [void]$mail.Attachments.Add("$tempFile.png", $olByValue, 0)
+            [System.IO.File]::Delete("$tempFile.png")
+            $html = $imgRegex.Replace($html, "`$1cid:$fileName`$3", 1)
+        }
+
+        $mail.BodyFormat = 2
+        $mail.HTMLBody = $html
+
+        if ($Attachment)
+        {
+            $Attachment | ForEach-Object {
+                [void]$mail.Attachments.Add($_)
+            }
+        }
+
+        if ($To) { $mail.To = $To -join '; ' }
+        if ($Cc) { $mail.CC = $Cc -join '; ' }
+        if ($Subject) { $mail.Subject = $Subject }
+
+        if ($Send)
+        {
+            $mail.Send()
+        }
+        elseif ($SaveDraft)
+        {
+            $mail.Save()
+        }
+        else
+        {
+            $mail.Display()
+        }
+    }
+}

@@ -98,7 +98,8 @@ FunctionsToExport = @(
     'Convert-PSCodeToHtml',
     'Get-HtmlFragment',
     'Get-HtmlFullDocument',
-    'Out-HtmlFile'
+    'Out-HtmlFile',
+    'Out-Outlook'
 )
 
 # Cmdlets to export from this module
