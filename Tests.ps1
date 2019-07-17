@@ -54,6 +54,8 @@ Get-HtmlFragment {
 
     Get-Service | Select-Object Name, Status, DisplayName -First 10 | ConvertTo-HtmlTable
 
+    Get-Service | Select-Object Name, Status, DisplayName -First 10 -Skip 10 | ConvertTo-HtmlTable -Narrow
+
     h2 "Convert PS Code to HTML"
 
     div {

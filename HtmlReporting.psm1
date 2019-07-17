@@ -57,6 +57,8 @@ table.HtmlReportingTable td {
     padding: 6px 10px 6px 10px;
     page-break-inside: avoid;
 }
+table.HtmlReportingTable.Narrow td {
+    padding: 1px 10px 1px 10px;
 }
 table.HtmlReportingTable td.nowrap {
     white-space: nowrap;
@@ -175,7 +177,8 @@ Function ConvertTo-HtmlTable
         [Parameter()] [hashtable] $CellColspanScripts,
         [Parameter()] [hashtable] $CellRowspanScripts,
         [Parameter()] [string[]] $RightAlignProperty,
-        [Parameter()] [string[]] $NoWrapProperty
+        [Parameter()] [string[]] $NoWrapProperty,
+        [Parameter()] [switch] $Narrow
     )
     Begin
     {
@@ -198,7 +201,8 @@ Function ConvertTo-HtmlTable
 
         if (-not $RowsOnly.IsPresent)
         {
-            $resultList.Add("<table class='HtmlReportingTable'>")
+            $narrowCss = if ($Narrow) { ' Narrow' }
+            $resultList.Add("<table class='HtmlReportingTable$narrowCss'>")
             $resultList.Add("<thead>")
             $resultList.Add("<tr class='header'>")
             foreach ($header in $headerList)
