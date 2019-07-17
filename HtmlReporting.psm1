@@ -17,26 +17,25 @@ span.title {
 h1 {
     font-weight: bold;
     font-size: 22pt;
-    margin: 0.6em 0em 0.6em 0em;
+    margin: 0.6em 0 0.6em 0;
 }
 h2 {
     font-weight: bold;
     font-size: 15pt;
-    margin: 0.8em 0em 0.2em 0em;
+    margin: 0.8em 0 0.2em 0;
 }
 h3 {
     font-weight: bold;
     font-size: 13.5pt;
-    margin: 0.6em 0em 0.1em 0em;
+    margin: 0.6em 0 0.1em 0;
 }
 h4 {
     font-weight: bold;
     font-size: 12pt;
-    margin: 0.5em 0em 0.1em 0em;
+    margin: 0.5em 0 0.1em 0;
 }
-p
-{
-    margin: 0.3em 0em 0.5em 0em;
+p {
+    margin: 0.3em 0 0.5em 0;
 }
 
 table.HtmlReportingTable {
@@ -46,20 +45,18 @@ table.HtmlReportingTable {
 table.HtmlReportingTable th {
     text-align: left;
     border-style: none none solid none;
-    border-width: 0px 0px 2px 0px;
+    border-width: 0 0 2px 0;
     border-color: black;
     padding: 2px 10px 2px 10px;
     page-break-inside: avoid;
 }
 table.HtmlReportingTable td {
     border-style: solid none none none;
-    border-width: 1px 0px 0px 0px;
+    border-width: 1px 0 0 0;
     border-color: black;
     padding: 6px 10px 6px 10px;
     page-break-inside: avoid;
 }
-table.HtmlReportingTable caption{
-    text-align: left;
 }
 table.HtmlReportingTable td.nowrap {
     white-space: nowrap;
@@ -81,7 +78,7 @@ table.HtmlReportingTable .ralign {
 }
 
 .IndicatorTextBorder {
-    padding: 0px 5px 0px 5px;
+    padding: 0 5px 0 5px;
     border-style: solid;
     border-thickness: 1.5px;
     border-radius: 5px;
