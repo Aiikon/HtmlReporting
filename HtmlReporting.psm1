@@ -130,11 +130,12 @@ Function ConvertTo-HtmlColorBlocks
             $idList = New-Object System.Collections.Generic.List[string]
             $inputObjectList |
                 Select-Object $TocProperty |
-                Set-PropertyValue Link {
+                ForEach-Object {
                     $id = [guid]::NewGuid().ToString('n')
                     if ($SectionProperty) { $id = $InputObject.$SectionProperty }
                     $idList.Add($id)
-                    "<a href='#$id'>Link</a>"
+                    $_.PSObject.Properties.Add([PSNoteProperty]::New('Link', "<a href='#$id'>Link</a>"))
+                    $_
                 } |
                 ConvertTo-HtmlTable -HtmlProperty $htmlPropertyList
             "<br /><br />"
