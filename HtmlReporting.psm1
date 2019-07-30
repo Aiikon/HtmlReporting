@@ -814,7 +814,7 @@ Function Out-HtmlFile
 
         [System.IO.File]::WriteAllLines($FilePath, @($htmlText))
 
-        & $FilePath
+        if ($Open -or !$PSBoundParameters['FilePath']) { & $FilePath }
     }
 }
 
