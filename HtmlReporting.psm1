@@ -702,6 +702,60 @@ Function Convert-PSCodeToHtml
     }
 }
 
+Function GenerateHtmlTagFunctions
+{
+    $functionHash = @{}
+        
+    $otherParameters = @{}
+    $otherParameters['a'] = ",`r`n[Parameter()] [string] `$Name,`r`n[Parameter()] [string] `$Href"
+
+    $otherLines = @{}
+    $otherLines['a'] = "if (`$Name) { `$otherList += ""name='`$Name`'"" }", "if (`$Href) { `$otherList += ""href='`$Href`'"" }"
+
+    foreach ($private:t in 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a')
+    {
+        $functionHash[$t] = [ScriptBlock]::Create("
+        [CmdletBinding(PositionalBinding=`$false)]
+        Param
+        (
+            [Parameter(ValueFromRemainingArguments=`$true)] [object[]] `$Definition,
+            [Parameter()] [string[]] `$Class,
+            [Parameter()] [string[]] `$Style$($otherParameters[$t])
+        )
+        `$otherList = @()
+        if (`$Class) { `$otherList += ""class='`$(`$Class -join ' ')'"" }
+        if (`$Style) { `$otherList += ""style='`$(`$Style -join ' ')'"" }
+        $($otherLines[$t] -join "`r`n")
+        `$otherCode = ''
+        if (`$otherList) { `$otherCode = "" `$(`$otherList -join ' ')"" }
+        `$text = foreach (`$item in `$Definition)
+        {
+            if (`$item -is [scriptblock]) { & `$item } else { `$item }
+        }
+        ""<$t`$otherCode>"", (`$text -join ' '), ""</$t>`r`n"" -join ''")
+    }
+    $functionHash['br'] = { "<br />" }
+
+    $Script:HtmlTagFunctionHash = $functionHash
+}
+
+Function Import-HtmlTagFunctions
+{
+    End
+    {
+        if (Get-Module -Name HtmlReportingTagFunctions) { return }
+        if (!$Script:HtmlTagFunctionHash) { GenerateHtmlTagFunctions }
+
+        $moduleText = foreach ($function in $Script:HtmlTagFunctionHash.Keys)
+        {
+            "Function $function { $($Script:HtmlTagFunctionHash[$function]) }"
+        }
+
+        New-Module -ScriptBlock ([ScriptBlock]::Create($moduleText -join "`r`n")) -Name HtmlReportingTagFunctions |
+            Import-Module -Scope Global
+    }
+}
+
 Function Get-HtmlFragment
 {
     Param
@@ -710,39 +764,9 @@ Function Get-HtmlFragment
     )
     End
     {
-        $functionHash = @{}
-        
-        $otherParameters = @{}
-        $otherParameters['a'] = ",`r`n[Parameter()] [string] `$Name,`r`n[Parameter()] [string] `$Href"
+        if (!$Script:HtmlTagFunctionHash) { GenerateHtmlTagFunctions }
 
-        $otherLines = @{}
-        $otherLines['a'] = "if (`$Name) { `$otherList += ""name='`$Name`'"" }", "if (`$Href) { `$otherList += ""href='`$Href`'"" }"
-
-        foreach ($private:t in 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a')
-        {
-            $functionHash[$t] = [ScriptBlock]::Create("
-            [CmdletBinding(PositionalBinding=`$false)]
-            Param
-            (
-                [Parameter(ValueFromRemainingArguments=`$true)] [object[]] `$Definition,
-                [Parameter()] [string[]] `$Class,
-                [Parameter()] [string[]] `$Style$($otherParameters[$t])
-            )
-            `$otherList = @()
-            if (`$Class) { `$otherList += ""class='`$(`$Class -join ' ')'"" }
-            if (`$Style) { `$otherList += ""style='`$(`$Style -join ' ')'"" }
-            $($otherLines[$t] -join "`r`n")
-            `$otherCode = ''
-            if (`$otherList) { `$otherCode = "" `$(`$otherList -join ' ')"" }
-            `$text = foreach (`$item in `$Definition)
-            {
-                if (`$item -is [scriptblock]) { & `$item } else { `$item }
-            }
-            ""<$t`$otherCode>"", (`$text -join ' '), ""</$t>`r`n"" -join ''")
-        }
-        $functionHash['br'] = { "<br />" }
-
-        $Definiton.InvokeWithContext($functionHash, $null, $null) -join ''
+        $Definiton.InvokeWithContext($Script:HtmlTagFunctionHash, $null, $null) -join ''
     }
 }
 
