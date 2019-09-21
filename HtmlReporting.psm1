@@ -172,10 +172,10 @@ Function ConvertTo-HtmlTable
         [Parameter()] [switch] $RowsOnly,
         [Parameter()] [scriptblock] $RowClassScript,
         [Parameter()] [scriptblock] $RowStyleScript,
-        [Parameter()] [hashtable] $CellClassScripts,
-        [Parameter()] [hashtable] $CellStyleScripts,
-        [Parameter()] [hashtable] $CellColspanScripts,
-        [Parameter()] [hashtable] $CellRowspanScripts,
+        [Parameter()] [hashtable] $CellClassScripts = @{},
+        [Parameter()] [hashtable] $CellStyleScripts = @{},
+        [Parameter()] [hashtable] $CellColspanScripts = @{},
+        [Parameter()] [hashtable] $CellRowspanScripts = @{},
         [Parameter()] [string[]] $RightAlignProperty,
         [Parameter()] [string[]] $NoWrapProperty,
         [Parameter()] [switch] $Narrow
@@ -197,7 +197,7 @@ Function ConvertTo-HtmlTable
             $Property = $inputObjectList[0].PSObject.Properties.Name
         }
 
-        $Property | ForEach-Object { $headerList.Add($_) }
+        foreach ($p in $Property) { $headerList.Add($p) }
 
         if (-not $RowsOnly.IsPresent)
         {
@@ -252,15 +252,15 @@ Function ConvertTo-HtmlTable
 
                 $cellValue = $object.$header
 
-                if ($CellClassScripts.$header)
+                if ($CellClassScripts[$header])
                 {
-                    $object | ForEach-Object $CellClassScripts.$header |
+                    $object | ForEach-Object $CellClassScripts[$header] |
                         ForEach-Object { $cellClassList.Add($_) }
                 }
 
-                if ($CellStyleScripts.$header)
+                if ($CellStyleScripts[$header])
                 {
-                    $object | ForEach-Object $CellStyleScripts.$header |
+                    $object | ForEach-Object $CellStyleScripts[$header] |
                         ForEach-Object { $cellStyleList.Add($_) }
                 }
 
@@ -278,7 +278,7 @@ Function ConvertTo-HtmlTable
                 if ($cellStyleList) { $styleHtml = " style='$($cellStyleList -join '; ')'" }
                 
                 $colspanHtml = ''
-                if ($CellColspanScripts.$header)
+                if ($CellColspanScripts[$header])
                 {
                     $colspanCount = $object | ForEach-Object $CellColspanScripts.$header | Select-Object -First 1
                     if ($colspanCount -gt 1)
@@ -292,7 +292,7 @@ Function ConvertTo-HtmlTable
                     }
                 }
                 $rowspanHtml = ''
-                if ($CellRowspanScripts.$header)
+                if ($CellRowspanScripts[$header])
                 {
                     $rowspanCount = $object | ForEach-Object $CellRowspanScripts.$header | Select-Object -First 1
                     if ($rowspanCount -gt 1)
