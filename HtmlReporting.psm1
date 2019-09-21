@@ -280,7 +280,9 @@ Function ConvertTo-HtmlTable
                 $colspanHtml = ''
                 if ($CellColspanScripts[$header])
                 {
-                    $colspanCount = $object | ForEach-Object $CellColspanScripts.$header | Select-Object -First 1
+                    $colspanCount = $CellColspanScripts.$header
+                    if ($colspanCount -is [scriptblock]) { $colspanCount = $object | ForEach-Object $colspanCount | Select-Object -First 1 }
+                    else { $colspanCount = [int]$object.$colspanCount }
                     if ($colspanCount -gt 1)
                     {
                         $colspanHtml = " colspan='$colspanCount'"
@@ -294,7 +296,9 @@ Function ConvertTo-HtmlTable
                 $rowspanHtml = ''
                 if ($CellRowspanScripts[$header])
                 {
-                    $rowspanCount = $object | ForEach-Object $CellRowspanScripts.$header | Select-Object -First 1
+                    $rowspanCount = $CellRowspanScripts.$header
+                    if ($rowspanCount -is [scriptblock]) { $rowspanCount = $object | ForEach-Object $rowspanCount | Select-Object -First 1 }
+                    else { $rowspanCount = [int]$object.$rowspanCount }
                     if ($rowspanCount -gt 1)
                     {
                         $rowspanHtml = " rowspan='$rowspanCount'"

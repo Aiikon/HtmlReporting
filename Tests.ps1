@@ -56,6 +56,14 @@ Get-HtmlFragment {
 
     Get-Service | Select-Object Name, Status, DisplayName -First 10 -Skip 10 | ConvertTo-HtmlTable -Narrow
 
+    "
+        Rowspan,Value
+        1,A
+        2,B
+        2,C
+        1,D
+    ".Trim() -replace '\A ' | ConvertFrom-Csv | ConvertTo-HtmlTable -CellRowspanScripts @{Value='Rowspan'}
+
     h2 "Convert PS Code to HTML"
 
     div {
