@@ -104,7 +104,9 @@ FunctionsToExport = @(
 )
 
 # Cmdlets to export from this module
-CmdletsToExport = @()
+CmdletsToExport = @(
+    'ConvertTo-HtmlTable'
+)
 
 # Variables to export from this module
 VariablesToExport = @()

@@ -106,3 +106,24 @@ return
     Get-ChildItem C:\ | Select-Object Name, LastWriteTime, Length -First 10 | ConvertTo-HtmlTable
 } |
     Out-HtmlFile ~\Desktop\Test.html -Open
+
+
+# Random ConvertTo-HtmlTable tests
+
+Get-ChildItem C:\Windows |
+    ConvertTo-HtmlTable -NoWrapProperty * -RightAlignProperty Name -Narrow -RowClassScript {
+        if ($_.Name -match 'boot') { 'red' }
+    } -RowStyleScript {
+        if ($_.Name -match 'Branding') { 'font-family: monospace' }
+    } -CellClassScripts @{
+        PSParentPath = {
+            if ($_.Name -eq 'Assembly') { 'blue' }
+        }
+    } -CellStyleScripts @{
+        PSParentPath = { if ($_.Name -eq 'CSC') { 'font-family: monospace' } }
+    } -CellColspanScripts @{
+        PSPath = { if ($_.Name -eq 'addins') { 3 } }
+    } -CellRowspanScripts @{
+        PSParentPath = { if ($_.Name -eq 'debug') { 3 } }
+    } |
+    Out-HtmlFile

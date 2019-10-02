@@ -1,3 +1,28 @@
+try
+{
+    if ($Global:2e128b9186234521b3ab5ce70cc83360_ForceLoadPowerShellCmdlets -eq $true) { throw "Skipping HtmlReportingSharp Compilation" }
+    $date = [System.IO.File]::GetLastWriteTime("$PSScriptRoot\HtmlReportingSharp\Helpers.cs").ToString("yyyyMMdd_HHmmss")
+    $Script:OutputPath = "$Env:LOCALAPPDATA\Rhodium\Module\HtmlReportingSharp_$date\HtmlReportingSharp.dll"
+    if (![System.IO.File]::Exists($outputPath))
+    {
+        [void][System.IO.Directory]::CreateDirectory("$Env:LOCALAPPDATA\Rhodium")
+        [void][System.IO.Directory]::CreateDirectory("$Env:LOCALAPPDATA\Rhodium\Module")
+        [void][System.IO.Directory]::CreateDirectory("$Env:LOCALAPPDATA\Rhodium\Module\HtmlReportingSharp_$date")
+        $fileList = [System.IO.Directory]::GetFiles("$PSScriptRoot\HtmlReportingSharp", "*.cs")
+        Add-Type -Path $fileList -OutputAssembly $Script:OutputPath -OutputType Library -ErrorAction Stop -ReferencedAssemblies System.Web
+    }
+
+    Import-Module -Name $Script:OutputPath -Force -ErrorAction Stop
+
+    $Script:LoadedHtmlReportingSharp = $true
+}
+catch
+{
+    Write-Warning "Unable to compile C# cmdlets; falling back to regular cmdlets."
+    Write-Host -ForegroundColor Red $_.Exception.Message
+    $Script:LoadedHtmlReportingSharp = $false
+}
+
 Add-Type -AssemblyName 'System.Web'
 
 $Script:HtmlStyle = @"
@@ -162,6 +187,7 @@ Function ConvertTo-HtmlColorBlocks
     }
 }
 
+if (!$Script:LoadedHtmlReportingSharp) {
 Function ConvertTo-HtmlTable
 {
     Param
@@ -325,6 +351,7 @@ Function ConvertTo-HtmlTable
 
         $resultList -join "`r`n"
     }
+}
 }
 
 Function ConvertTo-HtmlStrongText
