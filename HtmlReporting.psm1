@@ -735,15 +735,19 @@ Function Convert-PSCodeToHtml
 
 Function GenerateHtmlTagFunctions
 {
-    $functionHash = @{}
+    $private:functionHash = @{}
         
-    $otherParameters = @{}
-    $otherParameters['a'] = ",`r`n[Parameter()] [string] `$Name,`r`n[Parameter()] [string] `$Href"
+    $private:other = @{}
+    $other['a'] = 'Name', 'Href', 'Target'
+    $other['form'] = 'Action', 'Method'
+    $other['input'] = 'Type', 'Name', 'Value'
+    $other['select'] = 'Name'
+    $other['option'] = 'Value'
+    $other['textarea'] = 'Name', 'Rows', 'Cols'
+    $other['button'] = 'Type'
 
-    $otherLines = @{}
-    $otherLines['a'] = "if (`$Name) { `$otherList += ""name='`$Name`'"" }", "if (`$Href) { `$otherList += ""href='`$Href`'"" }"
-
-    foreach ($private:t in 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a')
+    foreach ($private:t in 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a',
+        'form', 'input', 'button', 'select', 'option', 'textarea', 'button')
     {
         $functionHash[$t] = [ScriptBlock]::Create("
         [CmdletBinding(PositionalBinding=`$false)]
@@ -751,19 +755,23 @@ Function GenerateHtmlTagFunctions
         (
             [Parameter(ValueFromRemainingArguments=`$true)] [object[]] `$Definition,
             [Parameter()] [string[]] `$Class,
-            [Parameter()] [string[]] `$Style$($otherParameters[$t])
+            [Parameter()] [string] `$Id,
+            [Parameter()] [string[]] `$Style,
+            [Parameter()] [hashtable] `$Attributes$(foreach ($p in $other[$t]) { ",`r`n[Parameter()] [string] `$$p" } )
         )
         `$otherList = @()
         if (`$Class) { `$otherList += ""class='`$(`$Class -join ' ')'"" }
         if (`$Style) { `$otherList += ""style='`$(`$Style -join ' ')'"" }
-        $($otherLines[$t] -join "`r`n")
+        if (`$Id) { `$otherList += ""id='`$Id'"" }
+        if (`$Attributes) { foreach (`$key in `$Attributes.Keys) { `$otherList += `"`$key='`$(`$Attributes[`$key])'`" } }
+        $(foreach ($p in $other[$t]) { "if (`$$p) { `$otherList += """"$($p.ToLower())='`$$p'"""" }`r`n" } )
         `$otherCode = ''
         if (`$otherList) { `$otherCode = "" `$(`$otherList -join ' ')"" }
         `$text = foreach (`$item in `$Definition)
         {
             if (`$item -is [scriptblock]) { & `$item } else { `$item }
         }
-        ""<$t`$otherCode>"", (`$text -join ' '), ""</$t>`r`n"" -join ''")
+        ""<$t`$otherCode>"", (`$text -join ' '), ""</$t>"" -join ''")
     }
     $functionHash['br'] = { "<br />" }
 
