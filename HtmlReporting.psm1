@@ -581,7 +581,9 @@ Function Get-HtmlIndicatorText
                 'Brown', 'Tan')]
             [string] $ColorName,
         [Parameter()] [switch] $BorderOnly,
-        [Parameter()] [string] $Width
+        [Parameter()] [string] $Width,
+        [Parameter()] [string] $Title,
+        [Parameter()] [string[]] $Class
     )
     End
     {
@@ -591,13 +593,15 @@ Function Get-HtmlIndicatorText
         $widthCss = ''
         if ($Width) { $widthCss = "width:$Width;text-align:center;" }
         if (!$TextIsHtml) { $Text = Get-HtmlEncodedText $Text -InsertBr }
+        $titleHtml = if ($Title) { " title='$title'" }
+        $classCss = if ($Class) { " $($Class -join ' ')" }
         if ($BorderOnly)
         {
-            "<span class='IndicatorTextBorder' style='border-color:$colorCss;$widthCss'>$Text</span>"
+            "<span class='IndicatorTextBorder$classCss' style='border-color:$colorCss;$widthCss'$titleHtml>$Text</span>"
         }
         else
         {
-            "<span class='IndicatorText' style='background:$colorCss;$widthCss'>$Text</span>"
+            "<span class='IndicatorText$classCss' style='background:$colorCss;$widthCss'$titleHtml>$Text</span>"
         }
     }
 }
