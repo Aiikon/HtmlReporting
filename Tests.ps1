@@ -47,7 +47,7 @@ Get-HtmlFragment {
         li (Get-HtmlIndicatorText "Sample 1" -ColorName Green)
         li (Get-HtmlIndicatorText "Sample 2" -ColorName Red -BorderOnly)
         li (Get-HtmlIndicatorText "Sample 3" -ColorIndex 0 -Width 200px)
-        li (Get-HtmlIndicatorText "Sample 4" -ColorRGB 0,0,0)
+        li (Get-HtmlIndicatorText "Hover Over Me" -ColorRGB 0,0,0 -Title 'Title Usage')
     }
 
     h2 Table
