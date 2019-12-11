@@ -148,7 +148,6 @@ namespace HtmlReportingSharp
             }
 
             var rowspanCountHash = new Dictionary<string, int>();
-            int rowspanCount = 0;
 
             foreach (var inputObject in inputObjectList)
             {
@@ -231,11 +230,11 @@ namespace HtmlReportingSharp
 
                     if (CellRowspanScripts != null && CellRowspanScripts.Contains(header))
                     {
-                        rowspanCount = GetCountFromProperty(inputObject, CellRowspanScripts, header);
-                        if (rowspanCount > 1)
+                        rowspanCountHash[header] = GetCountFromProperty(inputObject, CellRowspanScripts, header);
+                        if (rowspanCountHash[header] > 1)
                         {
-                            resultBuilder.AppendFormat(" rowspan='{0}'", rowspanCount);
-                            rowspanCount--;
+                            resultBuilder.AppendFormat(" rowspan='{0}'", rowspanCountHash[header]);
+                            rowspanCountHash[header] = rowspanCountHash[header] - 1;
                         }
                     }
 
