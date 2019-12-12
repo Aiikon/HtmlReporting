@@ -754,6 +754,7 @@ Function GenerateHtmlTagFunctions
         Param
         (
             [Parameter(ValueFromRemainingArguments=`$true)] [object[]] `$Definition,
+            [Parameter()] [string[]] `$HtmlEncode,
             [Parameter()] [string[]] `$Class,
             [Parameter()] [string] `$Id,
             [Parameter()] [string[]] `$Style,
@@ -767,10 +768,13 @@ Function GenerateHtmlTagFunctions
         $(foreach ($p in $other[$t]) { "if (`$$p) { `$otherList += """"$($p.ToLower())='`$$p'"""" }`r`n" } )
         `$otherCode = ''
         if (`$otherList) { `$otherCode = "" `$(`$otherList -join ' ')"" }
-        `$text = foreach (`$item in `$Definition)
-        {
-            if (`$item -is [scriptblock]) { & `$item } else { `$item }
-        }
+        `$text = @(
+            foreach (`$item in `$Definition)
+            {
+                if (`$item -is [scriptblock]) { & `$item } else { `$item }
+            }
+            foreach (`$item in `$HtmlEncode) { [System.Web.HttpUtility]::HtmlEncode(`$item) }
+        )
         ""<$t`$otherCode>"", (`$text -join ' '), ""</$t>"" -join ''")
     }
     $functionHash['br'] = { "<br />" }
