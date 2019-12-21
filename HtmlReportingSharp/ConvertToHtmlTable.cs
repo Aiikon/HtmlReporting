@@ -53,6 +53,9 @@ namespace HtmlReportingSharp
         [Parameter()]
         public SwitchParameter Narrow { get; set; }
 
+        [Parameter()]
+        public string NoContentHtml { get; set; }
+        
         private List<PSObject> inputObjectList = new List<PSObject>();
 
         private int GetCountFromProperty(PSObject inputObject, Hashtable dictionary, string header)
@@ -129,13 +132,14 @@ namespace HtmlReportingSharp
 
             bool noWrapAll = NoWrapProperty.Length == 1 && NoWrapProperty[0] == "*";
 
-            if (Property == null)
+            if (Property == null && inputObjectList.Count != 0)
                 Property = inputObjectList[0].Properties.Select(p => p.Name).ToArray();
+            
+            if (inputObjectList.Count != 0)
+                foreach (var p in Property)
+                    headerList.Add(p);
 
-            foreach (var p in Property)
-                headerList.Add(p);
-
-            if (!RowsOnly.IsPresent)
+            if (!RowsOnly.IsPresent && inputObjectList.Count != 0)
             {
                 var classList = new List<string>();
                 classList.Add("HtmlReportingTable");
@@ -153,6 +157,9 @@ namespace HtmlReportingSharp
                 resultBuilder.Append("</thead>\r\n");
                 resultBuilder.Append("<tbody>\r\n");
             }
+            
+            if (inputObjectList.Count == 0 && NoContentHtml != null)
+                resultBuilder.Append(NoContentHtml);
 
             var rowspanCountHash = new Dictionary<string, int>();
 
@@ -257,7 +264,7 @@ namespace HtmlReportingSharp
                 resultBuilder.Append("</tr>\r\n");
             }
 
-            if (!RowsOnly.IsPresent)
+            if (!RowsOnly.IsPresent && inputObjectList.Count != 0)
             {
                 resultBuilder.Append("</tbody>\r\n");
                 resultBuilder.Append("</table>");

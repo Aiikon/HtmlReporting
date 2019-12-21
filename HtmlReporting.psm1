@@ -205,7 +205,8 @@ Function ConvertTo-HtmlTable
         [Parameter()] [hashtable] $CellRowspanScripts = @{},
         [Parameter()] [string[]] $RightAlignProperty,
         [Parameter()] [string[]] $NoWrapProperty,
-        [Parameter()] [switch] $Narrow
+        [Parameter()] [switch] $Narrow,
+        [Parameter()] [string] $NoContentHtml
     )
     Begin
     {
@@ -226,7 +227,7 @@ Function ConvertTo-HtmlTable
 
         foreach ($p in $Property) { $headerList.Add($p) }
 
-        if (-not $RowsOnly.IsPresent)
+        if (-not $RowsOnly.IsPresent -and $inputObjectList.Count)
         {
             $classList = @('HtmlReportingTable')
             if ($Narrow) { $classList += 'Narrow' }
@@ -242,6 +243,8 @@ Function ConvertTo-HtmlTable
             $resultList.Add("</thead>")
             $resultList.Add("<tbody>")
         }
+
+        if (!$inputObjectList.Count -and $NoContentHtml) { $resultList.Add($NoContentHtml) }
 
         $rowspanCountHash = @{}
 
@@ -346,7 +349,7 @@ Function ConvertTo-HtmlTable
             $resultList.Add('</tr>')
         }       
 
-        if (-not $RowsOnly.IsPresent)
+        if (-not $RowsOnly.IsPresent -and $inputObjectList.Count)
         {
             $resultList.Add("</tbody>")
             $resultList.Add("</table>")
