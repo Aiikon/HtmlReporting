@@ -195,6 +195,7 @@ Function ConvertTo-HtmlTable
         [Parameter(ValueFromPipeline=$true)] [object] $InputObject,
         [Parameter()] [string[]] $Property,
         [Parameter()] [string[]] $HtmlProperty,
+        [Parameter()] [string[]] $Class,
         [Parameter()] [switch] $RowsOnly,
         [Parameter()] [scriptblock] $RowClassScript,
         [Parameter()] [scriptblock] $RowStyleScript,
@@ -227,8 +228,10 @@ Function ConvertTo-HtmlTable
 
         if (-not $RowsOnly.IsPresent)
         {
-            $narrowCss = if ($Narrow) { ' Narrow' }
-            $resultList.Add("<table class='HtmlReportingTable$narrowCss'>")
+            $classList = @('HtmlReportingTable')
+            if ($Narrow) { $classList += 'Narrow' }
+            if ($Class) { foreach ($c in $Class) { $classList += $c } }
+            $resultList.Add("<table class='$($classList -join ' ')'>")
             $resultList.Add("<thead>")
             $resultList.Add("<tr class='header'>")
             foreach ($header in $headerList)

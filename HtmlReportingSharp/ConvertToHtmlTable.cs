@@ -21,6 +21,9 @@ namespace HtmlReportingSharp
         public string[] HtmlProperty { get; set; }
 
         [Parameter()]
+        public string[] Class { get; set; }
+        
+        [Parameter()]
         public SwitchParameter RowsOnly { get; set; }
 
         [Parameter()]
@@ -134,10 +137,14 @@ namespace HtmlReportingSharp
 
             if (!RowsOnly.IsPresent)
             {
-                resultBuilder.Append("<table class='HtmlReportingTable");
+                var classList = new List<string>();
+                classList.Add("HtmlReportingTable");
                 if (Narrow.IsPresent)
-                    resultBuilder.Append(" Narrow");
-                resultBuilder.Append("'>\r\n");
+                    classList.Add("Narrow");
+                if (Class != null)
+                    foreach (var c in Class)
+                        classList.Add(c);
+                resultBuilder.AppendFormat("<table class='{0}'>\r\n", String.Join(" ", classList));
                 resultBuilder.Append("<thead>\r\n");
                 resultBuilder.Append("<tr class='header'>\r\n");
                 foreach (var header in headerList)
