@@ -139,7 +139,8 @@ Function ConvertTo-HtmlColorBlocks
         [Parameter(Position=0)] [ScriptBlock] $OutputScript,
         [Parameter()] [string[]] $TocProperty,
         [Parameter()] [string[]] $HtmlTocProperty,
-        [Parameter()] [string] $SectionProperty
+        [Parameter()] [string] $SectionProperty,
+        [Parameter()] [switch] $NarrowToc
     )
     Begin
     {
@@ -164,7 +165,7 @@ Function ConvertTo-HtmlColorBlocks
                     $_.PSObject.Properties.Add([PSNoteProperty]::New('Link', "<a href='#$id'>Link</a>"))
                     $_
                 } |
-                ConvertTo-HtmlTable -HtmlProperty $htmlPropertyList
+                ConvertTo-HtmlTable -HtmlProperty $htmlPropertyList -Narrow:$NarrowToc
             "<br /><br />"
         }
 
