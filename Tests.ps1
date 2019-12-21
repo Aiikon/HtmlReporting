@@ -1,5 +1,6 @@
-﻿Import-Module C:\PSModule\HtmlReporting -Force
+﻿Import-Module $PSScriptRoot -Force
 
+#$Global:2e128b9186234521b3ab5ce70cc83360_ForceLoadPowerShellCmdlets = $true
 $someVariable = "abcdefg"
 
 Get-HtmlFragment {
@@ -25,6 +26,7 @@ Get-HtmlFragment {
     p "Some" (em (strong "strong and emphasized")) "text"
     p "And making use of `$someVariable: $someVariable"
     p "Making use of some $(span -style 'color:red;' "red") text"
+
     p {
         "A sample link:"
         a -href 'test.html' 'Test'
@@ -42,6 +44,8 @@ Get-HtmlFragment {
         li "Item B"
     }
 
+    hr
+
     h2 Indicators
     ul {
         li (Get-HtmlIndicatorText "Sample 1" -ColorName Green)
@@ -50,12 +54,21 @@ Get-HtmlFragment {
         li (Get-HtmlIndicatorText "Hover Over Me" -ColorRGB 0,0,0 -Title 'Title Usage')
     }
 
+    hr
+
     h2 Table
 
+    h3 Normal
     Get-Service | Select-Object Name, Status, DisplayName -First 10 | ConvertTo-HtmlTable
 
+    h3 Narrow
     Get-Service | Select-Object Name, Status, DisplayName -First 10 -Skip 10 | ConvertTo-HtmlTable -Narrow
 
+    h3 Custom Class
+    "<style>table.HtmlReportingTable.Wide td { padding: 30px 10px 30px 10px; }</style>"
+    Get-Service | Select-Object Name, Status, DisplayName -First 10 -Skip 20 | ConvertTo-HtmlTable -Narrow -Class Wide
+
+    h3 Rowspan from Number
     "
         Rowspan,Value
         1,A
@@ -63,6 +76,12 @@ Get-HtmlFragment {
         2,C
         1,D
     ".Trim() -replace '\A ' | ConvertFrom-Csv | ConvertTo-HtmlTable -CellRowspanScripts @{Value='Rowspan'}
+
+    h2 No Content
+
+    @() | ConvertTo-HtmlTable -NoContentHtml (p (em "No Content"))
+
+    hr
 
     h2 "Convert PS Code to HTML"
 
@@ -87,11 +106,36 @@ Get-HtmlFragment {
         $i += 1
     }
 
+    hr
 
     h2 ConvertTo-HtmlColorBlocks
 
     Get-Service | Select-Object -First 5 Name, DisplayName, Status, StartType |
         ConvertTo-HtmlColorBlocks -TocProperty Name -OutputScript { $_ | ConvertTo-HtmlStrongText }
+
+    Get-Service | Select-Object -First 5 Name, DisplayName, Status, StartType |
+        ConvertTo-HtmlColorBlocks -TocProperty Name -OutputScript { p $_.Name } -NarrowToc
+
+    hr
+
+    h2 Assorted HTML Table Tests
+
+    Get-ChildItem C:\Windows |
+        ConvertTo-HtmlTable -NoWrapProperty * -RightAlignProperty Name -Narrow -RowClassScript {
+            if ($_.Name -match 'boot') { 'red' }
+        } -RowStyleScript {
+            if ($_.Name -match 'Branding') { 'font-family: monospace' }
+        } -CellClassScripts @{
+            PSParentPath = {
+                if ($_.Name -eq 'Assembly') { 'blue' }
+            }
+        } -CellStyleScripts @{
+            PSParentPath = { if ($_.Name -eq 'CSC') { 'font-family: monospace' } }
+        } -CellColspanScripts @{
+            PSPath = { if ($_.Name -eq 'addins') { 3 } }
+        } -CellRowspanScripts @{
+            PSParentPath = { if ($_.Name -eq 'debug') { 3 } }
+        }
 
 } |
     Out-HtmlFile -AddTimestamp
@@ -106,24 +150,3 @@ return
     Get-ChildItem C:\ | Select-Object Name, LastWriteTime, Length -First 10 | ConvertTo-HtmlTable
 } |
     Out-HtmlFile ~\Desktop\Test.html -Open
-
-
-# Random ConvertTo-HtmlTable tests
-
-Get-ChildItem C:\Windows |
-    ConvertTo-HtmlTable -NoWrapProperty * -RightAlignProperty Name -Narrow -RowClassScript {
-        if ($_.Name -match 'boot') { 'red' }
-    } -RowStyleScript {
-        if ($_.Name -match 'Branding') { 'font-family: monospace' }
-    } -CellClassScripts @{
-        PSParentPath = {
-            if ($_.Name -eq 'Assembly') { 'blue' }
-        }
-    } -CellStyleScripts @{
-        PSParentPath = { if ($_.Name -eq 'CSC') { 'font-family: monospace' } }
-    } -CellColspanScripts @{
-        PSPath = { if ($_.Name -eq 'addins') { 3 } }
-    } -CellRowspanScripts @{
-        PSParentPath = { if ($_.Name -eq 'debug') { 3 } }
-    } |
-    Out-HtmlFile
