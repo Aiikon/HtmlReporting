@@ -784,6 +784,7 @@ Function GenerateHtmlTagFunctions
         ""<$t`$otherCode>"", (`$text -join ' '), ""</$t>"" -join ''")
     }
     $functionHash['br'] = { "<br />" }
+    $functionHash['hr'] = { "<hr />" }
 
     $Script:HtmlTagFunctionHash = $functionHash
 }
