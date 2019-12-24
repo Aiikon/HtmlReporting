@@ -745,13 +745,13 @@ Function GenerateHtmlTagFunctions
     $private:functionHash = @{}
         
     $private:other = @{}
-    $other['a'] = 'Name', 'Href', 'Target'
-    $other['form'] = 'Action', 'Method'
-    $other['input'] = 'Type', 'Name', 'Value'
-    $other['select'] = 'Name'
-    $other['option'] = 'Value'
-    $other['textarea'] = 'Name', 'Rows', 'Cols'
-    $other['button'] = 'Type'
+    $other['a'] = 'name', 'href', 'target'
+    $other['form'] = 'action', 'method'
+    $other['input'] = 'type', 'name', 'value'
+    $other['select'] = 'name'
+    $other['option'] = 'value'
+    $other['textarea'] = 'name', 'rows', 'cols'
+    $other['button'] = 'type', 'onclick'
 
     foreach ($private:t in 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a',
         'form', 'input', 'button', 'select', 'option', 'textarea', 'button')
@@ -762,15 +762,15 @@ Function GenerateHtmlTagFunctions
         (
             [Parameter(ValueFromRemainingArguments=`$true)] [object[]] `$Definition,
             [Parameter()] [string[]] `$HtmlEncode,
-            [Parameter()] [string[]] `$Class,
-            [Parameter()] [string] `$Id,
-            [Parameter()] [string[]] `$Style,
+            [Parameter()] [string[]] `$class,
+            [Parameter()] [string] `$id,
+            [Parameter()] [string[]] `$style,
             [Parameter()] [hashtable] `$Attributes$(foreach ($p in $other[$t]) { ",`r`n[Parameter()] [string] `$$p" } )
         )
         `$otherList = @()
-        if (`$Class) { `$otherList += ""class='`$(`$Class -join ' ')'"" }
-        if (`$Style) { `$otherList += ""style='`$(`$Style -join ' ')'"" }
-        if (`$Id) { `$otherList += ""id='`$Id'"" }
+        if (`$class) { `$otherList += ""class='`$(`$class -join ' ')'"" }
+        if (`$style) { `$otherList += ""style='`$(`$style -join ' ')'"" }
+        if (`$id) { `$otherList += ""id='`$id'"" }
         if (`$Attributes) { foreach (`$key in `$Attributes.Keys) { `$otherList += `"`$key='`$(`$Attributes[`$key])'`" } }
         $(foreach ($p in $other[$t]) { "if (`$$p) { `$otherList += """"$($p.ToLower())='`$$p'"""" }`r`n" } )
         `$otherCode = ''
