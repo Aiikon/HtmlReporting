@@ -204,6 +204,7 @@ Function ConvertTo-HtmlTable
         [Parameter()] [hashtable] $CellStyleScripts = @{},
         [Parameter()] [hashtable] $CellColspanScripts = @{},
         [Parameter()] [hashtable] $CellRowspanScripts = @{},
+        [Parameter()] [hashtable] $RenameHeader = @{},
         [Parameter()] [string[]] $RightAlignProperty,
         [Parameter()] [string[]] $NoWrapProperty,
         [Parameter()] [switch] $Narrow,
@@ -238,6 +239,7 @@ Function ConvertTo-HtmlTable
             $resultList.Add("<tr class='header'>")
             foreach ($header in $headerList)
             {
+                if ($RenameHeader[$header]) { $header = $RenameHeader[$header] }
                 $resultList.Add("<th>$header</th>")
             }
             $resultList.Add("</tr>")

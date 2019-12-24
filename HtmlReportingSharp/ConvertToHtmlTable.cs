@@ -45,6 +45,9 @@ namespace HtmlReportingSharp
         public Hashtable CellRowspanScripts { get; set; }
 
         [Parameter()]
+        public Hashtable RenameHeader { get; set; }
+
+        [Parameter()]
         public string[] RightAlignProperty { get; set; }
 
         [Parameter()]
@@ -139,6 +142,12 @@ namespace HtmlReportingSharp
                 foreach (var p in Property)
                     headerList.Add(p);
 
+            var renameHeaderDict = new Dictionary<string,string>();
+            if (RenameHeader != null)
+                foreach (object key in RenameHeader.Keys)
+                    if (RenameHeader[key] != null)
+                        renameHeaderDict[key.ToString()] = RenameHeader[key].ToString();
+
             if (!RowsOnly.IsPresent && inputObjectList.Count != 0)
             {
                 var classList = new List<string>();
@@ -151,8 +160,13 @@ namespace HtmlReportingSharp
                 resultBuilder.AppendFormat("<table class='{0}'>\r\n", String.Join(" ", classList));
                 resultBuilder.Append("<thead>\r\n");
                 resultBuilder.Append("<tr class='header'>\r\n");
-                foreach (var header in headerList)
-                    resultBuilder.Append(String.Format("<th>{0}</th>\r\n", header));
+                foreach (string header in headerList)
+                {
+                    if (renameHeaderDict.ContainsKey(header))
+                        resultBuilder.Append(String.Format("<th>{0}</th>\r\n", renameHeaderDict[header]));
+                    else
+                        resultBuilder.Append(String.Format("<th>{0}</th>\r\n", header));
+                }
                 resultBuilder.Append("</tr>\r\n");
                 resultBuilder.Append("</thead>\r\n");
                 resultBuilder.Append("<tbody>\r\n");
