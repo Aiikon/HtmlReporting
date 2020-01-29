@@ -136,7 +136,7 @@ Function ConvertTo-HtmlColorBlocks
     Param
     (
         [Parameter(ValueFromPipeline=$true)] [object] $InputObject,
-        [Parameter(Position=0)] [ScriptBlock] $OutputScript,
+        [Parameter(Position=0,Mandatory=$true)] [ScriptBlock] $OutputScript,
         [Parameter()] [string[]] $TocProperty,
         [Parameter()] [string[]] $HtmlTocProperty,
         [Parameter()] [string] $SectionProperty,
