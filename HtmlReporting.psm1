@@ -129,6 +129,12 @@ table.HtmlReportingTable .ralign {
 .blue {
     color: blue;
 }
+.cursorhand {
+    cursor: hand;
+}
+.cursorhelp {
+    cursor:help;
+}
 "@
 
 Function ConvertTo-HtmlColorBlocks
