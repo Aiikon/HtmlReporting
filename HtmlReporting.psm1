@@ -154,18 +154,18 @@ Function ConvertTo-HtmlColorBlocks
     {
         if ($TocProperty)
         {
+            $propertyList = & { $TocProperty; 'Link' } | Select-Object -Unique
             $htmlPropertyList = & { $HtmlTocProperty; 'Link' } | Select-Object -Unique
             $idList = New-Object System.Collections.Generic.List[string]
             $inputObjectList |
-                Select-Object $TocProperty |
                 ForEach-Object {
                     $id = [guid]::NewGuid().ToString('n')
-                    if ($SectionProperty) { $id = $InputObject.$SectionProperty }
+                    if ($SectionProperty) { $id = $_.$SectionProperty }
                     $idList.Add($id)
                     $_.PSObject.Properties.Add([PSNoteProperty]::New('Link', "<a href='#$id'>Link</a>"))
                     $_
                 } |
-                ConvertTo-HtmlTable -HtmlProperty $htmlPropertyList -Narrow:$NarrowToc
+                ConvertTo-HtmlTable -Property $propertyList -HtmlProperty $htmlPropertyList -Narrow:$NarrowToc
             "<br /><br />"
         }
 
