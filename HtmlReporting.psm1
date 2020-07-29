@@ -29,11 +29,11 @@ $Script:HtmlStyle = @"
 h1, h2, h3, h4, p, li, td, th {
     color: black;
     font-size: 11pt;
-    font-family: Calibri;
+    font-family: Calibri, "Lucida Sans", Sans-Serif;
 }
 body, a {
     font-size: 11pt;
-    font-family: Calibri;
+    font-family: Calibri, "Lucida Sans", Sans-Serif;
 }
 span.title {
     font-weight: bold;
