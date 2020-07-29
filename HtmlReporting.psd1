@@ -87,19 +87,19 @@ NestedModules = @('HtmlReporting.psm1')
 
 # Functions to export from this module
 FunctionsToExport = @(
-    'ConvertTo-HtmlColorBlocks',
-    'ConvertTo-HtmlTable',
-    'ConvertTo-HtmlStrongText',
-    'ConvertFrom-HtmlTable',
-    'Get-HtmlEncodedText',
-    'Get-HtmlReportColor',
-    'Get-HtmlImgTag',
-    'Get-HtmlIndicatorText',
-    'Convert-PSCodeToHtml',
-    'Import-HtmlTagFunctions',
-    'Get-HtmlFragment',
-    'Get-HtmlFullDocument',
-    'Out-HtmlFile',
+    'ConvertTo-HtmlColorBlocks'
+    'ConvertTo-HtmlTable'
+    'ConvertTo-HtmlStrongText'
+    'ConvertFrom-HtmlTable'
+    'Get-HtmlEncodedText'
+    'Get-HtmlReportColor'
+    'Get-HtmlImgTag'
+    'Get-HtmlIndicatorText'
+    'Convert-PSCodeToHtml'
+    'Import-HtmlTagFunctions'
+    'Get-HtmlFragment'
+    'Get-HtmlFullDocument'
+    'Out-HtmlFile'
     'Out-Outlook'
 )
 
