@@ -327,7 +327,7 @@ Function ConvertTo-HtmlTable
                 $classHtml = ''
                 $styleHtml = ''
                 if ($cellClassList) { $classHtml = " class='$($cellClassList -join ' ')'" }
-                if ($cellStyleList) { $styleHtml = " style='$($cellStyleList -join '; ')'" }
+                if ($cellStyleList) { $styleHtml = " style='$($cellStyleList -join ' ')'" }
                 
                 $colspanHtml = ''
                 if ($CellColspanScripts[$header])

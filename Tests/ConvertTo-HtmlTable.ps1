@@ -62,6 +62,50 @@
                 $resultXml.SelectNodes('//tbody/tr[2]/td[3]/@style').'#text' | Should Be "color:red;"
             }
 
+            It "Works with multiple output cell style scripts" {
+                $result = $SampleData1 | ConvertTo-HtmlTable -CellStyleScripts @{ClusterName={if ($_.ClusterId -eq 2) { 'color:red;'; 'font-weight:bold;' }}}
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr[2]/td[2]/@style').'#text' | Should Be "color:red; font-weight:bold;"
+                $resultXml.SelectNodes('//tbody/tr[2]/td[3]/@style').'#text' | Should Be $null
+            }
+
+            It "Works with row style script" {
+                $result = $SampleData1 | ConvertTo-HtmlTable -RowStyleScript {if ($_.ClusterId -eq 2) { 'color:red;'; 'font-weight:bold;' }}
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr[2]/td[1]/@style').'#text' | Should Be "color:red; font-weight:bold;"
+                $resultXml.SelectNodes('//tbody/tr[2]/td[2]/@style').'#text' | Should Be "color:red; font-weight:bold;"
+                $resultXml.SelectNodes('//tbody/tr[2]/td[3]/@style').'#text' | Should Be "color:red; font-weight:bold;"
+            }
+
+            It "Works with simple cell class scripts" {
+                $result = $SampleData1 | ConvertTo-HtmlTable -CellClassScripts @{ClusterName={if ($_.ClusterId -eq 2) { 'red' }}}
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr[2]/td[2]/@class').'#text' | Should Be "red"
+                $resultXml.SelectNodes('//tbody/tr[2]/td[3]/@class').'#text' | Should Be $null
+            }
+
+            It "Works with array cell class scripts" {
+                $result = $SampleData1 | ConvertTo-HtmlTable -CellClassScripts @{('ClusterName', 'ClusterType')={if ($_.ClusterId -eq 2) { 'red' }}}
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr[2]/td[2]/@class').'#text' | Should Be "red"
+                $resultXml.SelectNodes('//tbody/tr[2]/td[3]/@class').'#text' | Should Be "red"
+            }
+
+            It "Works with multiple output cell class scripts" {
+                $result = $SampleData1 | ConvertTo-HtmlTable -CellClassScripts @{ClusterName={if ($_.ClusterId -eq 2) { 'red';'bold' }}}
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr[2]/td[2]/@class').'#text' | Should Be "red bold"
+                $resultXml.SelectNodes('//tbody/tr[2]/td[3]/@class').'#text' | Should Be $null
+            }
+
+            It "Works with row cell class script" {
+                $result = $SampleData1 | ConvertTo-HtmlTable -RowClassScript {if ($_.ClusterId -eq 2) { 'red';'bold' }}
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr[2]/td[1]/@class').'#text' | Should Be "red bold"
+                $resultXml.SelectNodes('//tbody/tr[2]/td[2]/@class').'#text' | Should Be "red bold"
+                $resultXml.SelectNodes('//tbody/tr[2]/td[3]/@class').'#text' | Should Be "red bold"
+            }
+
             It "Joins array values with spaces (OFS)" {
                 $result = [pscustomobject]@{A=1,'Two'} | ConvertTo-HtmlTable
                 $resultXml = [xml]$result
