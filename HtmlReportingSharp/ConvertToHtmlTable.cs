@@ -182,18 +182,33 @@ namespace HtmlReportingSharp
                 var rowClassList = new List<string>();
                 var rowStyleList = new List<string>();
 
-                if (RowClassScript != null)
-                    foreach (var result in RowClassScript.InvokeWithContext(null, new List<PSVariable>() { new PSVariable("_", inputObject) }, null))
-                        if (result != null)
-                            rowClassList.Add(result.ToString());
-
-                if (RowStyleScript != null)
-                    foreach (var result in RowStyleScript.InvokeWithContext(null, new List<PSVariable>() { new PSVariable("_", inputObject) }, null))
-                        if (result != null)
-                            rowStyleList.Add(result.ToString());
+                rowClassList.AddRange(Helpers.InvokeScriptblockReturnStringArray(RowClassScript, inputObject));
+                rowStyleList.AddRange(Helpers.InvokeScriptblockReturnStringArray(RowStyleScript, inputObject));
 
                 int colspanCount = 0;
                 resultBuilder.Append("<tr>\r\n");
+
+                var cellClassDict = new Dictionary<string, string[]>(StringComparer.CurrentCultureIgnoreCase);
+                if (CellClassScripts != null)
+                {
+                    foreach (DictionaryEntry pair in CellClassScripts)
+                    {
+                        string[] result = Helpers.InvokeScriptblockReturnStringArray(pair.Value, inputObject);
+                        foreach (string header in Helpers.ConvertObjectToStringArray(pair.Key))
+                            cellClassDict[header] = result;
+                    }
+                }
+
+                var cellStyleDict = new Dictionary<string, string[]>(StringComparer.CurrentCultureIgnoreCase);
+                if (CellStyleScripts != null)
+                {
+                    foreach (DictionaryEntry pair in CellStyleScripts)
+                    {
+                        string[] result = Helpers.InvokeScriptblockReturnStringArray(pair.Value, inputObject);
+                        foreach (string header in Helpers.ConvertObjectToStringArray(pair.Key))
+                            cellStyleDict[header] = result;
+                    }
+                }
 
                 foreach (var header in headerList)
                 {
@@ -215,25 +230,15 @@ namespace HtmlReportingSharp
                     var cellClassList = new List<string>(rowClassList);
                     var cellStyleList = new List<string>(rowStyleList);
 
+                    if (cellClassDict.ContainsKey(header))
+                        cellClassList.AddRange(cellClassDict[header]);
+
+                    if (cellStyleDict.ContainsKey(header))
+                        cellStyleList.AddRange(cellStyleDict[header]);
+
                     string cellValue = "";
                     if (inputObject.Properties[header] != null && inputObject.Properties[header].Value != null)
                         cellValue = inputObject.Properties[header].Value.ToString();
-
-                    if (CellClassScripts != null && CellClassScripts.ContainsKey(header))
-                    {
-                        ScriptBlock script = (ScriptBlock)CellClassScripts[header];
-                        foreach (var result in script.InvokeWithContext(null, new List<PSVariable>() { new PSVariable("_", inputObject) }, null))
-                            if (result != null)
-                                cellClassList.Add(result.ToString());
-                    }
-
-                    if (CellStyleScripts != null && CellStyleScripts.ContainsKey(header))
-                    {
-                        ScriptBlock script = (ScriptBlock)CellStyleScripts[header];
-                        foreach (var result in script.InvokeWithContext(null, new List<PSVariable>() { new PSVariable("_", inputObject) }, null))
-                            if (result != null)
-                                cellStyleList.Add(result.ToString());
-                    }
 
                     if (!HtmlProperty.Contains(header))
                         cellValue = System.Web.HttpUtility.HtmlEncode(cellValue).Replace("\r\n", "<br />");

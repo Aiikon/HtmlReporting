@@ -273,6 +273,26 @@ Function ConvertTo-HtmlTable
             $colspanCount = 0
             $resultList.Add('<tr>')
 
+            $cellClassDict = [ordered]@{}
+            foreach ($pair in $CellClassScripts.GetEnumerator())
+            {
+                $result = $object | ForEach-Object $pair.Value
+                foreach ($header in $pair.Key)
+                {
+                    $cellClassDict[$header] = $result
+                }
+            }
+
+            $cellStyleDict = [ordered]@{}
+            foreach ($pair in $CellStyleScripts.GetEnumerator())
+            {
+                $result = $object | ForEach-Object $pair.Value
+                foreach ($header in $pair.Key)
+                {
+                    $cellStyleDict[$header] = $result
+                }
+            }
+
             foreach ($header in $headerList)
             {
                 $skipCell = $false
@@ -291,19 +311,10 @@ Function ConvertTo-HtmlTable
                 $cellClassList = New-Object System.Collections.Generic.List[string] (,$rowClassList)
                 $cellStyleList = New-Object System.Collections.Generic.List[string] (,$rowStyleList)
 
+                foreach ($value in $cellClassDict[$header]) { $cellClassList.Add($value) }
+                foreach ($value in $cellStyleDict[$header]) { $cellStyleList.Add($value) }
+
                 $cellValue = $object.$header
-
-                if ($CellClassScripts[$header])
-                {
-                    $object | ForEach-Object $CellClassScripts[$header] |
-                        ForEach-Object { $cellClassList.Add($_) }
-                }
-
-                if ($CellStyleScripts[$header])
-                {
-                    $object | ForEach-Object $CellStyleScripts[$header] |
-                        ForEach-Object { $cellStyleList.Add($_) }
-                }
 
                 if ($header -notin $HtmlProperty)
                 {
