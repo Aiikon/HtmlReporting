@@ -238,7 +238,7 @@ namespace HtmlReportingSharp
 
                     string cellValue = "";
                     if (inputObject.Properties[header] != null && inputObject.Properties[header].Value != null)
-                        cellValue = inputObject.Properties[header].Value.ToString();
+                        cellValue = String.Join(" ", Helpers.ConvertObjectToStringArray(inputObject.Properties[header].Value));
 
                     if (!HtmlProperty.Contains(header))
                         cellValue = System.Web.HttpUtility.HtmlEncode(cellValue).Replace("\r\n", "<br />");

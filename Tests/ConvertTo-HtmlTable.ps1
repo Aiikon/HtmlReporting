@@ -61,6 +61,12 @@
                 $resultXml.SelectNodes('//tbody/tr[2]/td[2]/@style').'#text' | Should Be "color:red;"
                 $resultXml.SelectNodes('//tbody/tr[2]/td[3]/@style').'#text' | Should Be "color:red;"
             }
+
+            It "Joins array values with spaces (OFS)" {
+                $result = [pscustomobject]@{A=1,'Two'} | ConvertTo-HtmlTable
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr[1]/td[1]').'#text' | Should Be "1 Two"
+            }
         }
     }
 }

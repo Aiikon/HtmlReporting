@@ -26,14 +26,6 @@ namespace HtmlReportingSharp
             return result;
         }
 
-        public static string InvokeScriptblockReturnString(object ScriptBlock, PSObject InputObject)
-        {
-            string[] result = InvokeScriptblockReturnStringArray(ScriptBlock, InputObject);
-            if (result.Length == 0)
-                return null;
-            return String.Join("", result);
-        }
-
         public static string[] ConvertObjectToStringArray(object Object)
         {
             if (Object == null)
