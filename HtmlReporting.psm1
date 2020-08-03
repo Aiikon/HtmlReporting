@@ -866,7 +866,7 @@ Function Get-HtmlFullDocument
             $timestampHtml = "<div style='position: absolute; top: 5; right: 5;'>Created: $timestamp</div>"
         }
 
-        "<html><head><style>$Script:HtmlStyle</style></head><body>$htmlDoc$timestampHtml</body></head>"
+        "<html><head><style>$Script:HtmlStyle</style></head><body>$htmlDoc$timestampHtml</body></html>"
     }
 }
 
