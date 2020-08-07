@@ -774,13 +774,14 @@ Function GenerateHtmlTagFunctions
     $other['textarea'] = 'name', 'rows', 'cols'
     $other['button'] = 'type', 'onclick'
 
-    foreach ($private:t in 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a',
+    foreach ($private:t in 'html', 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a',
         'form', 'input', 'button', 'select', 'option', 'textarea', 'button')
     {
         $functionHash[$t] = [ScriptBlock]::Create("
         [CmdletBinding(PositionalBinding=`$false)]
         Param
         (
+            $(if ($t -eq 'html') {'[Parameter(Position=0,Mandatory=$true)] [string] $tag,'})
             [Parameter(ValueFromRemainingArguments=`$true)] [object[]] `$Definition,
             [Parameter()] [string[]] `$HtmlEncode,
             [Parameter()] [string[]] `$class,
@@ -788,6 +789,7 @@ Function GenerateHtmlTagFunctions
             [Parameter()] [string[]] `$style,
             [Parameter()] [hashtable] `$Attributes$(foreach ($p in $other[$t]) { ",`r`n[Parameter()] [string] `$$p" } )
         )
+        $(if ($t -ne 'html') { "`$private:tag = '$t'" })
         `$otherList = @()
         if (`$class) { `$otherList += ""class='`$(`$class -join ' ')'"" }
         if (`$style) { `$otherList += ""style='`$(`$style -join ' ')'"" }
@@ -803,7 +805,7 @@ Function GenerateHtmlTagFunctions
             }
             foreach (`$item in `$HtmlEncode) { [System.Web.HttpUtility]::HtmlEncode(`$item) }
         )
-        ""<$t`$otherCode>"", (`$text -join ' '), ""</$t>"" -join ''")
+        ""<`$tag`$otherCode>"", (`$text -join ' '), ""</`$tag>"" -join ''")
     }
     $functionHash['br'] = { "<br />" }
     $functionHash['hr'] = { "<hr />" }
