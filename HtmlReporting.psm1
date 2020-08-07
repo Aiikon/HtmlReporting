@@ -179,7 +179,7 @@ Function ConvertTo-HtmlColorBlocks
         foreach ($InputObject in $inputObjectList)
         {
             $html = $OutputScript.InvokeWithContext($null, (New-Object PSVariable "_", @($InputObject)), $null)
-            $color = Get-HtmlReportColor -Index $i -AssCssRGB
+            $color = Get-HtmlReportColor -Index $i -AsCssRgb
             if ($TocProperty)
             {
                 $id = $idList[$i]
@@ -534,7 +534,8 @@ Function Get-HtmlReportColor
                 'Teal', 'DarkGreen', 'LightOrange', 'Salmon', 'DarkRed', 'LightPurple',
                 'Brown', 'Tan')]
             [string] $Name,
-        [Parameter()] [switch] $AssCssRGB
+        [Parameter()] [switch] $AsCssRgb,
+        [Parameter()] [double] $AsCssRgba
     )
     End
     {
@@ -569,7 +570,8 @@ Function Get-HtmlReportColor
         }
         if ($Name) { $Index = $Script:ReportColorNameToIndex[$Name] }
         $rgb = $Script:ReportColorIndices[$Index]
-        if ($AssCssRGB) { "rgb($($rgb -join ','))" }
+        if ($AsCssRgb) { "rgb($($rgb -join ','))" }
+        elseif ($AsCssRgba) { "rgba($($rgb -join ','),$AsCssRgba)" }
         else { $rgb }
     }
 }
