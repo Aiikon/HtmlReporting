@@ -430,6 +430,8 @@ Function ConvertTo-HtmlHourlyHeatmap
     Param
     (
         [Parameter(ValueFromPipeline=$true)] [object] $InputObject,
+        [Parameter()] [string[]] $SetProperty,
+        [Parameter()] [string] $KeyJoin = '|',
         [Parameter()] [string] $TimestampProperty = 'Timestamp',
         [Parameter()] [string] $ValueProperty = 'Value',
         [Parameter(Mandatory=$true)] [object[]] $HeatmapColors,
@@ -445,17 +447,31 @@ Function ConvertTo-HtmlHourlyHeatmap
     Begin
     {
         $timestampDict = @{}
+        $rawTimestampDict = @{}
+        $setKeyValueDict = [ordered]@{}
     }
     Process
     {
         $timestamp = [datetime]$InputObject.$TimestampProperty
         if (!$timestamp) { Write-Error "InputObject does not have a $TimestampProperty value!"; return }
-        $timestampDict[$timestamp.Date.AddHours($timestamp.Hour)] = $InputObject.$ValueProperty
+        $timestamp = $timestamp.Date.AddHours($timestamp.Hour)
+        if ($SetProperty)
+        {
+            $setKey = $(foreach ($prop in $SetProperty) { $InputObject.$prop }) -join $KeyJoin
+            $setKeyValueDict[$setKey] = $InputObject
+            $fullKey = $setKey, $timestamp -join $KeyJoin
+            $timestampDict[$fullKey] = $InputObject.$ValueProperty
+        }
+        else
+        {
+            $timestampDict[$timestamp] = $InputObject.$ValueProperty
+        }
+        $rawTimestampDict[$timestamp] = $true
     }
     End
     {
         trap { $PSCmdlet.ThrowTerminatingError($_) }
-        $minMax = $timestampDict.Keys | Measure-Object -Minimum -Maximum
+        $minMax = $rawTimestampDict.Keys | Measure-Object -Minimum -Maximum
         if (!$StartDate) { $StartDate = $minMax.Minimum }
         if (!$EndDate) { $EndDate = $minMax.Maximum }
         if ($EndDate -lt $StartDate) { throw "EndDate must be greater than StartDate." }
@@ -471,60 +487,90 @@ Function ConvertTo-HtmlHourlyHeatmap
         }
 
         "<table$styleCss>"
+        "<thead>"
         "<tr>"
+        if ($SetProperty)
+        {
+            foreach ($prop in $SetProperty)
+            {
+                "<td>$([System.Web.HttpUtility]::HtmlEncode($prop))</td>"
+            }
+        }
         foreach ($date in $dateList)
         {
             "<td>$($date.ToString($DateHeaderFormat))</td>"
         }
         "</tr>"
-        "<tr>"
+        "</thead>"
+        "<tbody>"
+        
         $rowCount = 24 / $Columns
         $width = $Columns * $IndicatorSize + ($Columns - 1) * $IndicatorPadding
         $height = $rowCount * $IndicatorSize + ($rowCount - 1) * $IndicatorPadding
 
-        foreach ($date in $dateList)
+        if (!$SetProperty)
         {
-            "<td>"
-            "<svg width='$width' height='$height'>"
-            $x = 0
-            foreach ($col in 1..$Columns)
+            $setKeyValueDict['NA'] = 'NA'
+        }
+
+        foreach ($setKey in $setKeyValueDict.Keys)
+        {
+            $setObject = $setKeyValueDict[$setKey]
+            "<tr>"
+            if ($SetProperty)
             {
-                $y = 0
-                foreach ($row in 1..$rowCount)
+                foreach ($prop in $SetProperty)
                 {
-                    $hour = $rowCount * ($col - 1) + $row - 1
-                    $timestamp = $date.AddHours($hour)
-                    $value = $timestampDict[$timestamp]
-                    $fill = 'transparent'
-                    if ($value -eq $null)
+                    "<td>$([System.Web.HttpUtility]::HtmlEncode($setObject.$prop))</td>"
+                }
+            }
+            foreach ($date in $dateList)
+            {
+                "<td>"
+                "<svg width='$width' height='$height'>"
+                $x = 0
+                foreach ($col in 1..$Columns)
+                {
+                    $y = 0
+                    foreach ($row in 1..$rowCount)
                     {
-                        $value = 'No Value'
-                    }
-                    else
-                    {
-                        foreach ($heatmapColor in $heatmapColorList)
+                        $hour = $rowCount * ($col - 1) + $row - 1
+                        $timestamp = $date.AddHours($hour)
+                        $key = $timestamp
+                        if ($SetProperty) { $key = $setKey, $timestamp -join $KeyJoin }
+                        $value = $timestampDict[$key]
+                        $fill = 'transparent'
+                        if ($value -eq $null)
                         {
-                            if ($heatmapColor.Mode -eq 'Default' -or
-                                ($heatmapColor.Mode -eq 'EqualTo' -and $value -eq $heatmapColor.Value) -or
-                                ($heatmapColor.Mode -eq 'AtLeast' -and $value -ge $heatmapColor.Value)
-                            )
+                            $value = 'No Value'
+                        }
+                        else
+                        {
+                            foreach ($heatmapColor in $heatmapColorList)
                             {
-                                $fill = $heatmapColor.ColorCss
-                                break
+                                if ($heatmapColor.Mode -eq 'Default' -or
+                                    ($heatmapColor.Mode -eq 'EqualTo' -and $value -eq $heatmapColor.Value) -or
+                                    ($heatmapColor.Mode -eq 'AtLeast' -and $value -ge $heatmapColor.Value)
+                                )
+                                {
+                                    $fill = $heatmapColor.ColorCss
+                                    break
+                                }
                             }
                         }
+                        "<rect x='$x' y='$y' width='$IndicatorSize' height='$IndicatorSize' style='fill:$fill;'>"
+                        "<title>$($timestamp.ToString($TooltipDateFormat)) : $([System.Web.HttpUtility]::HtmlEncode($value))</title>"
+                        "</rect>"
+                        $y = $y + $IndicatorSize + $IndicatorPadding
                     }
-                    "<rect x='$x' y='$y' width='$IndicatorSize' height='$IndicatorSize' style='fill:$fill;'>"
-                    "<title>$($timestamp.ToString($TooltipDateFormat)) : $([System.Web.HttpUtility]::HtmlEncode($value))</title>"
-                    "</rect>"
-                    $y = $y + $IndicatorSize + $IndicatorPadding
+                    $x = $x + $IndicatorSize + $IndicatorPadding
                 }
-                $x = $x + $IndicatorSize + $IndicatorPadding
+                "</td>"
+                "</svg>"
             }
-            "</td>"
-            "</svg>"
+            "</tr>"
         }
-        "</tr>"
+        "</tbody>"
         "</table>"
     }
 }
