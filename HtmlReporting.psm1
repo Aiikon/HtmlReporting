@@ -430,8 +430,9 @@ Function ConvertTo-HtmlHourlyHeatmap
     Param
     (
         [Parameter(ValueFromPipeline=$true)] [object] $InputObject,
-        [Parameter(Mandatory=$true)] [string] $TimestampProperty,
-        [Parameter(Mandatory=$true)] [string] $ValueProperty,
+        [Parameter()] [string] $TimestampProperty = 'Timestamp',
+        [Parameter()] [string] $ValueProperty = 'Value',
+        [Parameter(Mandatory=$true)] [object[]] $HeatmapColors,
         [Parameter()] [int] $IndicatorSize = 10,
         [Parameter()] [int] $IndicatorPadding = 1,
         [Parameter()] [string] $Style = "padding: 0px 6px",
@@ -439,8 +440,6 @@ Function ConvertTo-HtmlHourlyHeatmap
         [Parameter()] [datetime] $EndDate,
         [Parameter()] [string] $DateHeaderFormat = 'M/d',
         [Parameter()] [string] $TooltipDateFormat = 'MM dd @ h:mm:tt',
-        [Parameter(Mandatory=$true)] [ValidateSet('AtLeast')] [string] $ValueColorMode,
-        [Parameter(Mandatory=$true)] [hashtable] $ValueColors,
         [Parameter()] [ValidateSet(1,2,3,4,6,12,24)] [int] $Columns = 3
     )
     Begin
@@ -463,13 +462,13 @@ Function ConvertTo-HtmlHourlyHeatmap
 
         $dateCount = ($EndDate.Date - $StartDate.Date).TotalDays
         $dateList = 0..$dateCount | ForEach-Object { $StartDate.Date.AddDays($_) }
-        $valueColorDict = [ordered]@{}
-        foreach ($key in @($valueColors.Keys) | Sort-Object -Descending)
-        {
-            $valueColorDict.Add($key, $ValueColors.$key)
-        }
-
         $styleCss = if ($Style) { " style='$Style'" }
+
+        $heatmapColorList = foreach ($heatmapColor in $HeatmapColors)
+        {
+            if ($heatmapColor -is [scriptblock]) { & $heatmapColor }
+            else { $heatmapColor }
+        }
 
         "<table$styleCss>"
         "<tr>"
@@ -496,17 +495,23 @@ Function ConvertTo-HtmlHourlyHeatmap
                     $hour = $rowCount * ($col - 1) + $row - 1
                     $timestamp = $date.AddHours($hour)
                     $value = $timestampDict[$timestamp]
+                    $fill = 'transparent'
                     if ($value -eq $null)
                     {
                         $value = 'No Value'
-                        $fill = 'transparent'
                     }
                     else
                     {
-                        foreach ($key in $valueColorDict.Keys)
+                        foreach ($heatmapColor in $heatmapColorList)
                         {
-                            $fill = $valueColorDict.$key
-                            if ($value -ge $key) { break }
+                            if ($heatmapColor.Mode -eq 'Default' -or
+                                ($heatmapColor.Mode -eq 'EqualTo' -and $value -eq $heatmapColor.Value) -or
+                                ($heatmapColor.Mode -eq 'AtLeast' -and $value -ge $heatmapColor.Value)
+                            )
+                            {
+                                $fill = $heatmapColor.ColorCss
+                                break
+                            }
                         }
                     }
                     "<rect x='$x' y='$y' width='$IndicatorSize' height='$IndicatorSize' style='fill:$fill;'>"
@@ -521,6 +526,34 @@ Function ConvertTo-HtmlHourlyHeatmap
         }
         "</tr>"
         "</table>"
+    }
+}
+
+Function Define-HtmlHeatmapColor
+{
+    [CmdletBinding(PositionalBinding=$false,DefaultParameterSetName='ColorName')]
+    Param
+    (
+        [Parameter(Position=0,Mandatory=$true,ParameterSetName='ColorName')]
+            [ValidateSet('Blue', 'Orange', 'Red', 'Green', 'Purple', 'SeaBlue', 'SkyBlue',
+                'Teal', 'DarkGreen', 'LightOrange', 'Salmon', 'DarkRed', 'LightPurple',
+                'Brown', 'Tan')]
+            [string] $ColorName,
+        [Parameter(Mandatory=$true,ParameterSetName='ColorRgb')] [int[]] $ColorRgb,
+        [Parameter(Position=1)] [ValidateSet('EqualTo', 'AtLeast', 'Default')] [string] $Mode = 'Default',
+        [Parameter(Position=2)] [object] $Value
+    )
+    End
+    {
+        trap { $PSCmdlet.ThrowTerminatingError($_) }
+
+        if ($ColorName) { $ColorRgb = Get-HtmlReportColor -Name $ColorName }
+        
+        $result = [ordered]@{}
+        $result.ColorCss = "rgb($($ColorRgb -join ','))"
+        $result.Mode = $Mode
+        $result.Value = $Value
+        [pscustomobject]$result
     }
 }
 
