@@ -90,6 +90,7 @@ FunctionsToExport = @(
     'ConvertTo-HtmlColorBlocks'
     'ConvertTo-HtmlTable'
     'ConvertTo-HtmlStrongText'
+    'ConvertTo-HtmlHourlyHeatmap'
     'ConvertFrom-HtmlTable'
     'Get-HtmlEncodedText'
     'Get-HtmlReportColor'

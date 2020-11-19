@@ -137,6 +137,18 @@ Get-HtmlFragment {
             PSParentPath = { if ($_.Name -eq 'debug') { 3 } }
         }
 
+    h2 Hourly Heatmap
+
+    0..(7*24-1) |
+    ForEach-Object {
+        [pscustomobject]@{Timestamp=[DateTime]::Today.AddHours($_); Value = Get-Random -Minimum 0 -Maximum 100}
+    } |
+    ConvertTo-HtmlHourlyHeatmap -TimestampProperty Timestamp -ValueProperty Value -ValueColorMode AtLeast -Columns 4 -IndicatorSize 20 -IndicatorPadding 2 -ValueColors @{
+        0 = Get-HtmlReportColor -Name Red -AsCssRgb
+        20 = Get-HtmlReportColor -Name Orange -AsCssRgb
+        50 = Get-HtmlReportColor -Name Green -AsCssRgb
+    }
+
 } |
     Out-HtmlFile -AddTimestamp
 

@@ -424,6 +424,106 @@ Function ConvertTo-HtmlStrongText
     }
 }
 
+Function ConvertTo-HtmlHourlyHeatmap
+{
+    [CmdletBinding(PositionalBinding=$false)]
+    Param
+    (
+        [Parameter(ValueFromPipeline=$true)] [object] $InputObject,
+        [Parameter(Mandatory=$true)] [string] $TimestampProperty,
+        [Parameter(Mandatory=$true)] [string] $ValueProperty,
+        [Parameter()] [int] $IndicatorSize = 10,
+        [Parameter()] [int] $IndicatorPadding = 1,
+        [Parameter()] [string] $Style = "padding: 0px 6px",
+        [Parameter()] [datetime] $StartDate,
+        [Parameter()] [datetime] $EndDate,
+        [Parameter()] [string] $DateHeaderFormat = 'M/d',
+        [Parameter()] [string] $TooltipDateFormat = 'MM dd @ h:mm:tt',
+        [Parameter(Mandatory=$true)] [ValidateSet('AtLeast')] [string] $ValueColorMode,
+        [Parameter(Mandatory=$true)] [hashtable] $ValueColors,
+        [Parameter()] [ValidateSet(1,2,3,4,6,12,24)] [int] $Columns = 3
+    )
+    Begin
+    {
+        $timestampDict = @{}
+    }
+    Process
+    {
+        $timestamp = [datetime]$InputObject.$TimestampProperty
+        if (!$timestamp) { Write-Error "InputObject does not have a $TimestampProperty value!"; return }
+        $timestampDict[$timestamp.Date.AddHours($timestamp.Hour)] = $InputObject.$ValueProperty
+    }
+    End
+    {
+        trap { $PSCmdlet.ThrowTerminatingError($_) }
+        $minMax = $timestampDict.Keys | Measure-Object -Minimum -Maximum
+        if (!$StartDate) { $StartDate = $minMax.Minimum }
+        if (!$EndDate) { $EndDate = $minMax.Maximum }
+        if ($EndDate -lt $StartDate) { throw "EndDate must be greater than StartDate." }
+
+        $dateCount = ($EndDate.Date - $StartDate.Date).TotalDays
+        $dateList = 0..$dateCount | ForEach-Object { $StartDate.Date.AddDays($_) }
+        $valueColorDict = [ordered]@{}
+        foreach ($key in @($valueColors.Keys) | Sort-Object -Descending)
+        {
+            $valueColorDict.Add($key, $ValueColors.$key)
+        }
+
+        $styleCss = if ($Style) { " style='$Style'" }
+
+        "<table$styleCss>"
+        "<tr>"
+        foreach ($date in $dateList)
+        {
+            "<td>$($date.ToString($DateHeaderFormat))</td>"
+        }
+        "</tr>"
+        "<tr>"
+        $rowCount = 24 / $Columns
+        $width = $Columns * $IndicatorSize + ($Columns - 1) * $IndicatorPadding
+        $height = $rowCount * $IndicatorSize + ($rowCount - 1) * $IndicatorPadding
+
+        foreach ($date in $dateList)
+        {
+            "<td>"
+            "<svg width='$width' height='$height'>"
+            $x = 0
+            foreach ($col in 1..$Columns)
+            {
+                $y = 0
+                foreach ($row in 1..$rowCount)
+                {
+                    $hour = $rowCount * ($col - 1) + $row - 1
+                    $timestamp = $date.AddHours($hour)
+                    $value = $timestampDict[$timestamp]
+                    if ($value -eq $null)
+                    {
+                        $value = 'No Value'
+                        $fill = 'transparent'
+                    }
+                    else
+                    {
+                        foreach ($key in $valueColorDict.Keys)
+                        {
+                            $fill = $valueColorDict.$key
+                            if ($value -ge $key) { break }
+                        }
+                    }
+                    "<rect x='$x' y='$y' width='$IndicatorSize' height='$IndicatorSize' style='fill:$fill;'>"
+                    "<title>$($timestamp.ToString($TooltipDateFormat)) : $([System.Web.HttpUtility]::HtmlEncode($value))</title>"
+                    "</rect>"
+                    $y = $y + $IndicatorSize + $IndicatorPadding
+                }
+                $x = $x + $IndicatorSize + $IndicatorPadding
+            }
+            "</td>"
+            "</svg>"
+        }
+        "</tr>"
+        "</table>"
+    }
+}
+
 Function Expand-XmlText
 {
     Param
