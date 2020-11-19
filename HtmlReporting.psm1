@@ -437,12 +437,12 @@ Function ConvertTo-HtmlHourlyHeatmap
         [Parameter(Mandatory=$true)] [object[]] $HeatmapColors,
         [Parameter()] [int] $IndicatorSize = 10,
         [Parameter()] [int] $IndicatorPadding = 1,
-        [Parameter()] [string] $Style = "padding: 0px 6px",
+        [Parameter()] [string[]] $Class = 'HtmlReportingTable',
         [Parameter()] [datetime] $StartDate,
         [Parameter()] [datetime] $EndDate,
         [Parameter()] [string] $DateHeaderFormat = 'M/d',
-        [Parameter()] [string] $TooltipDateFormat = 'MM dd @ h:mm:tt',
-        [Parameter()] [ValidateSet(1,2,3,4,6,12,24)] [int] $Columns = 3
+        [Parameter()] [string] $TooltipDateFormat = 'MM/dd @ h:mm tt',
+        [Parameter()] [ValidateSet(1,2,3,4,6,8,12,24)] [int] $Columns = 3
     )
     Begin
     {
@@ -478,7 +478,7 @@ Function ConvertTo-HtmlHourlyHeatmap
 
         $dateCount = ($EndDate.Date - $StartDate.Date).TotalDays
         $dateList = 0..$dateCount | ForEach-Object { $StartDate.Date.AddDays($_) }
-        $styleCss = if ($Style) { " style='$Style'" }
+        $classCss = if ($Class) { " class='$($Class -join ' ')'" }
 
         $heatmapColorList = foreach ($heatmapColor in $HeatmapColors)
         {
@@ -486,19 +486,19 @@ Function ConvertTo-HtmlHourlyHeatmap
             else { $heatmapColor }
         }
 
-        "<table$styleCss>"
+        "<table$classCss>"
         "<thead>"
         "<tr>"
         if ($SetProperty)
         {
             foreach ($prop in $SetProperty)
             {
-                "<td>$([System.Web.HttpUtility]::HtmlEncode($prop))</td>"
+                "<th>$prop</th>"
             }
         }
         foreach ($date in $dateList)
         {
-            "<td>$($date.ToString($DateHeaderFormat))</td>"
+            "<th>$($date.ToString($DateHeaderFormat))</th>"
         }
         "</tr>"
         "</thead>"
@@ -521,20 +521,20 @@ Function ConvertTo-HtmlHourlyHeatmap
             {
                 foreach ($prop in $SetProperty)
                 {
-                    "<td>$([System.Web.HttpUtility]::HtmlEncode($setObject.$prop))</td>"
+                    "<td>$($setObject.$prop)</td>"
                 }
             }
             foreach ($date in $dateList)
             {
                 "<td>"
                 "<svg width='$width' height='$height'>"
-                $x = 0
-                foreach ($col in 1..$Columns)
+                $y = 0
+                foreach ($row in 1..$rowCount)
                 {
-                    $y = 0
-                    foreach ($row in 1..$rowCount)
+                    $x = 0
+                    foreach ($col in 1..$Columns)
                     {
-                        $hour = $rowCount * ($col - 1) + $row - 1
+                        $hour = ($row - 1) * $Columns + $col - 1
                         $timestamp = $date.AddHours($hour)
                         $key = $timestamp
                         if ($SetProperty) { $key = $setKey, $timestamp -join $KeyJoin }
@@ -561,9 +561,9 @@ Function ConvertTo-HtmlHourlyHeatmap
                         "<rect x='$x' y='$y' width='$IndicatorSize' height='$IndicatorSize' style='fill:$fill;'>"
                         "<title>$($timestamp.ToString($TooltipDateFormat)) : $([System.Web.HttpUtility]::HtmlEncode($value))</title>"
                         "</rect>"
-                        $y = $y + $IndicatorSize + $IndicatorPadding
+                        $x = $x + $IndicatorSize + $IndicatorPadding
                     }
-                    $x = $x + $IndicatorSize + $IndicatorPadding
+                    $y = $y + $IndicatorSize + $IndicatorPadding
                 }
                 "</td>"
                 "</svg>"

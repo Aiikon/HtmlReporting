@@ -137,13 +137,29 @@ Get-HtmlFragment {
             PSParentPath = { if ($_.Name -eq 'debug') { 3 } }
         }
 
-    h2 Hourly Heatmap
+    h2 "Hourly Heatmap (One Set)"
 
     0..(14*24-1) |
         ForEach-Object {
             [pscustomobject]@{Timestamp=[DateTime]::Today.AddHours($_); Value = Get-Random -Minimum 0 -Maximum 100}
         } |
         ConvertTo-HtmlHourlyHeatmap -TimestampProperty Timestamp -ValueProperty Value -Columns 4 -IndicatorSize 20 -IndicatorPadding 2 -HeatmapColors @(
+            Define-HtmlHeatmapColor -ColorName Green -Mode AtLeast -Value 50
+            Define-HtmlHeatmapColor -ColorName Orange -Mode AtLeast -Value 25
+            Define-HtmlHeatmapColor -ColorName Red
+        )
+
+    h2 "Hourly Heatmap (Multiple Sets)"
+
+    'A', 'B', 'C' |
+        ForEach-Object {
+            $set = $_
+            0..(14*24-1) |
+                ForEach-Object {
+                    [pscustomobject]@{Set = "Set $set"; Timestamp=[DateTime]::Today.AddHours($_); Value = Get-Random -Minimum 0 -Maximum 100}
+                }
+    } |
+        ConvertTo-HtmlHourlyHeatmap -SetProperty Set -TimestampProperty Timestamp -ValueProperty Value -Columns 4 -IndicatorSize 20 -IndicatorPadding 2 -HeatmapColors @(
             Define-HtmlHeatmapColor -ColorName Green -Mode AtLeast -Value 50
             Define-HtmlHeatmapColor -ColorName Orange -Mode AtLeast -Value 25
             Define-HtmlHeatmapColor -ColorName Red
