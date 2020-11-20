@@ -575,6 +575,167 @@ Function ConvertTo-HtmlHourlyHeatmap
     }
 }
 
+Function ConvertTo-HtmlMonthlyHeatmap
+{
+    [CmdletBinding(PositionalBinding=$false)]
+    Param
+    (
+        [Parameter(ValueFromPipeline=$true)] [object] $InputObject,
+        [Parameter()] [string[]] $SetProperty,
+        [Parameter()] [string] $KeyJoin = '|',
+        [Parameter()] [string] $TimestampProperty = 'Timestamp',
+        [Parameter()] [string] $ValueProperty = 'Value',
+        [Parameter(Mandatory=$true)] [object[]] $HeatmapColors,
+        [Parameter()] [int] $IndicatorSize = 10,
+        [Parameter()] [int] $IndicatorPadding = 1,
+        [Parameter()] [string[]] $Class = 'HtmlReportingTable',
+        [Parameter()] [datetime] $StartDate,
+        [Parameter()] [datetime] $EndDate,
+        [Parameter()] [string] $DateHeaderFormat = 'MMM yyyy',
+        [Parameter()] [string] $TooltipDateFormat = 'MM/dd'
+    )
+    Begin
+    {
+        $timestampDict = @{}
+        $rawTimestampDict = @{}
+        $setKeyValueDict = [ordered]@{}
+    }
+    Process
+    {
+        $timestamp = [datetime]$InputObject.$TimestampProperty
+        if (!$timestamp) { Write-Error "InputObject does not have a $TimestampProperty value!"; return }
+        $timestamp = $timestamp.Date
+        if ($SetProperty)
+        {
+            $setKey = $(foreach ($prop in $SetProperty) { $InputObject.$prop }) -join $KeyJoin
+            $setKeyValueDict[$setKey] = $InputObject
+            $fullKey = $setKey, $timestamp -join $KeyJoin
+            $timestampDict[$fullKey] = $InputObject.$ValueProperty
+        }
+        else
+        {
+            $timestampDict[$timestamp] = $InputObject.$ValueProperty
+        }
+        $rawTimestampDict[$timestamp] = $true
+    }
+    End
+    {
+        trap { $PSCmdlet.ThrowTerminatingError($_) }
+        $minMax = $rawTimestampDict.Keys | Measure-Object -Minimum -Maximum
+        if (!$StartDate) { $StartDate = $minMax.Minimum }
+        if (!$EndDate) { $EndDate = $minMax.Maximum }
+        if ($EndDate -lt $StartDate) { throw "EndDate must be greater than StartDate." }
+
+        $tempDate = $StartDate.AddDays(1-$StartDate.Day)
+        $monthList = while ($tempDate -le $EndDate) { $tempDate; $tempDate = $tempDate.AddMonths(1) }
+        $monthCount = $monthList.Count
+
+        $classCss = if ($Class) { " class='$($Class -join ' ')'" }
+
+        $heatmapColorList = foreach ($heatmapColor in $HeatmapColors)
+        {
+            if ($heatmapColor -is [scriptblock]) { & $heatmapColor }
+            else { $heatmapColor }
+        }
+
+        "<table$classCss>"
+        "<thead>"
+        "<tr>"
+        if ($SetProperty)
+        {
+            foreach ($prop in $SetProperty)
+            {
+                "<th>$prop</th>"
+            }
+        }
+        foreach ($month in $monthList)
+        {
+            "<th>$($month.ToString($DateHeaderFormat))</th>"
+        }
+        "</tr>"
+        "</thead>"
+        "<tbody>"
+        
+        $rowCount = 6
+        $width = 7 * $IndicatorSize + 6 * $IndicatorPadding
+        $height = $rowCount * $IndicatorSize + ($rowCount - 1) * $IndicatorPadding
+
+        if (!$SetProperty)
+        {
+            $setKeyValueDict['NA'] = 'NA'
+        }
+
+        foreach ($setKey in $setKeyValueDict.Keys)
+        {
+            $setObject = $setKeyValueDict[$setKey]
+            "<tr>"
+            if ($SetProperty)
+            {
+                foreach ($prop in $SetProperty)
+                {
+                    "<td>$($setObject.$prop)</td>"
+                }
+            }
+            foreach ($month in $monthList)
+            {
+                "<td>"
+                "<svg width='$width' height='$height'>"
+                $y = 0
+                $endOfMonth = $month.AddMonths(1)
+                $timestamp = $month
+                $dow = $timestamp.DayOfWeek.value__
+                foreach ($row in 1..$rowCount)
+                {
+                    $x = $dow * $IndicatorSize + ($dow - 1) * $IndicatorPadding
+                    while ($dow -le 6)
+                    {
+                        $key = $timestamp
+                        if ($SetProperty) { $key = $setKey, $timestamp -join $KeyJoin }
+                        $value = $timestampDict[$key]
+                        $fill = 'transparent'
+                        if ($timestamp -ge $StartDate)
+                        {
+                            if ($value -eq $null)
+                            {
+                                $value = 'No Value'
+                            }
+                            else
+                            {
+                                foreach ($heatmapColor in $heatmapColorList)
+                                {
+                                    if ($heatmapColor.Mode -eq 'Default' -or
+                                        ($heatmapColor.Mode -eq 'EqualTo' -and $value -eq $heatmapColor.Value) -or
+                                        ($heatmapColor.Mode -eq 'AtLeast' -and $value -ge $heatmapColor.Value)
+                                    )
+                                    {
+                                        $fill = $heatmapColor.ColorCss
+                                        break
+                                    }
+                                }
+                            }
+                            "<rect x='$x' y='$y' width='$IndicatorSize' height='$IndicatorSize' style='fill:$fill;'>"
+                            "<title>$($timestamp.ToString($TooltipDateFormat)) : $([System.Web.HttpUtility]::HtmlEncode($value))</title>"
+                            "</rect>"
+                        }
+                        $x = $x + $IndicatorSize + $IndicatorPadding
+                        $dow += 1
+                        $timestamp = $timestamp.AddDays(1)
+                        if ($timestamp -ge $endOfMonth) { break }
+                    }
+                    $dow = 0
+                    if ($timestamp -ge $endOfMonth) { break }
+                    $y = $y + $IndicatorSize + $IndicatorPadding
+                }
+                "</td>"
+                "</svg>"
+            }
+            "</tr>"
+        }
+        "</tbody>"
+        "</table>"
+    }
+}
+
 Function Define-HtmlHeatmapColor
 {
     [CmdletBinding(PositionalBinding=$false,DefaultParameterSetName='ColorName')]

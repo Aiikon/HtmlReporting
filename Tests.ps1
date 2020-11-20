@@ -165,6 +165,34 @@ Get-HtmlFragment {
             Define-HtmlHeatmapColor -ColorName Red
         )
 
+    h2 "Monthly Heatmap (One Set)"
+
+        0..(31*4) |
+            ForEach-Object {
+                [pscustomobject]@{Set = "Set $set"; Timestamp=[DateTime]::Today.AddDays($_); Value = Get-Random -Minimum 0 -Maximum 100}
+            } |
+        ConvertTo-HtmlMonthlyHeatmap -TimestampProperty Timestamp -ValueProperty Value -IndicatorSize 20 -IndicatorPadding 2 -HeatmapColors @(
+            Define-HtmlHeatmapColor -ColorName Green -Mode AtLeast -Value 50
+            Define-HtmlHeatmapColor -ColorName Orange -Mode AtLeast -Value 25
+            Define-HtmlHeatmapColor -ColorName Red
+        )
+
+    h2 "Monthly Heatmap (Multiple Sets)"
+
+    'A', 'B', 'C' |
+        ForEach-Object {
+            $set = $_
+            0..(31*4) |
+                ForEach-Object {
+                    [pscustomobject]@{Set = "Set $set"; Timestamp=[DateTime]::Today.AddDays($_); Value = Get-Random -Minimum 0 -Maximum 100}
+                }
+    } |
+        ConvertTo-HtmlMonthlyHeatmap -SetProperty Set -TimestampProperty Timestamp -ValueProperty Value -IndicatorSize 20 -IndicatorPadding 2 -HeatmapColors @(
+            Define-HtmlHeatmapColor -ColorName Green -Mode AtLeast -Value 50
+            Define-HtmlHeatmapColor -ColorName Orange -Mode AtLeast -Value 25
+            Define-HtmlHeatmapColor -ColorName Red
+        )
+
 } |
     Out-HtmlFile -AddTimestamp
 
