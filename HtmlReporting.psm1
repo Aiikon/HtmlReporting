@@ -150,7 +150,7 @@ Function ConvertTo-HtmlColorBlocks
     )
     Begin
     {
-        $inputObjectList = New-Object System.Collections.Generic.List[Object]
+        $inputObjectList = [System.Collections.Generic.List[object]]::new()
     }
     Process
     {
@@ -162,7 +162,7 @@ Function ConvertTo-HtmlColorBlocks
         {
             $propertyList = & { $TocProperty; 'Link' } | Select-Object -Unique
             $htmlPropertyList = & { $HtmlTocProperty; 'Link' } | Select-Object -Unique
-            $idList = New-Object System.Collections.Generic.List[string]
+            $idList = [System.Collections.Generic.List[string]]::new()
             $inputObjectList |
                 ForEach-Object {
                     $id = [guid]::NewGuid().ToString('n')
@@ -218,7 +218,7 @@ Function ConvertTo-HtmlTable
     )
     Begin
     {
-        $inputObjectList = New-Object System.Collections.Generic.List[object]
+        $inputObjectList = [System.Collections.Generic.List[object]]::new()
     }
     Process
     {
@@ -226,8 +226,8 @@ Function ConvertTo-HtmlTable
     }
     End
     {
-        $resultList = New-Object System.Collections.Generic.List[string]
-        $headerList = New-Object System.Collections.Generic.List[string]
+        $resultList = [System.Collections.Generic.List[string]]::new()
+        $headerList = [System.Collections.Generic.List[string]]::new()
         if (-not $Property)
         {
             $Property = $inputObjectList[0].PSObject.Properties.Name
@@ -259,8 +259,8 @@ Function ConvertTo-HtmlTable
 
         foreach ($object in $inputObjectList)
         {
-            $rowClassList = New-Object System.Collections.Generic.List[string]
-            $rowStyleList = New-Object System.Collections.Generic.List[string]
+            $rowClassList = [System.Collections.Generic.List[string]]::new()
+            $rowStyleList = [System.Collections.Generic.List[string]]::new()
             if ($RowClassScript)
             {
                 $object | ForEach-Object $RowClassScript | ForEach-Object { $rowClassList.Add($_) }
@@ -308,8 +308,8 @@ Function ConvertTo-HtmlTable
                 }
                 if ($skipCell) { continue }
 
-                $cellClassList = New-Object System.Collections.Generic.List[string] (,$rowClassList)
-                $cellStyleList = New-Object System.Collections.Generic.List[string] (,$rowStyleList)
+                $cellClassList = [System.Collections.Generic.List[string]]::new($rowClassList)
+                $cellStyleList = [System.Collections.Generic.List[string]]::new($rowStyleList)
 
                 foreach ($value in $cellClassDict[$header]) { $cellClassList.Add($value) }
                 foreach ($value in $cellStyleDict[$header]) { $cellStyleList.Add($value) }
@@ -807,7 +807,7 @@ Function ConvertFrom-HtmlTable
             $selectArgs.Skip = 1
 
             Remove-Variable Headers
-            $headers = New-Object System.Collections.Generic.List[object]
+            $headers = [System.Collections.Generic.List[object]]::new()
 
             $rows[0].ChildNodes | ForEach-Object {
                 $header = $_.'#text'.Trim()
@@ -1076,7 +1076,7 @@ Function Convert-PSCodeToHtml
 
         [void][System.Reflection.Assembly]::Load("System.Web, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")
 
-        $psCodeList = New-Object System.Collections.Generic.List[string]
+        $psCodeList = [System.Collections.Generic.List[string]]::new()
     }
     Process
     {
@@ -1139,7 +1139,7 @@ Function Convert-PSCodeToHtml
         $tokens = [System.Management.Automation.PSParser]::Tokenize($unformattedText, [ref] $errors)
 
         # Initialize HTML builder.
-        $codeBuilder = New-Object System.Text.StringBuilder
+        $codeBuilder = [System.Text.StringBuilder]::new()
 
         # Iterate over the tokens and set the colors appropriately.
         $position = 0
@@ -1261,7 +1261,7 @@ Function Get-HtmlFullDocument
     )
     Begin
     {
-        $lines = New-Object System.Collections.Generic.List[string]
+        $lines = [System.Collections.Generic.List[string]]::new()
     }
     Process
     {
@@ -1293,7 +1293,7 @@ Function Out-HtmlFile
     )
     Begin
     {
-        $lines = New-Object System.Collections.Generic.List[string]
+        $lines = [System.Collections.Generic.List[string]]::new()
     }
     Process
     {
@@ -1343,7 +1343,7 @@ Function Out-Outlook
     )
     Begin
     {
-        $lines = New-Object System.Collections.Generic.List[string]
+        $lines = [System.Collections.Generic.List[string]]::new()
     }
     Process
     {
