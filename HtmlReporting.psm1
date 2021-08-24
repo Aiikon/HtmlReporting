@@ -25,6 +25,45 @@ catch
 
 Add-Type -AssemblyName 'System.Web'
 
+Add-Type @"
+using System;
+using System.Management.Automation;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace Rhodium.HtmlReporting
+{
+    public static class HtmlReportingHelpers
+    {
+        public static IEnumerable<string> ExcludeLikeAny(string[] Values, string[] Filters)
+        {
+            if (Filters == null)
+                foreach (var filter in Filters)
+                    yield return filter;
+                
+            var patterns = new WildcardPattern[Filters.Length];
+            for (int i = 0; i < Filters.Length; i++)
+                patterns[i] = new WildcardPattern(Filters[i], WildcardOptions.IgnoreCase);
+
+            foreach (string value in Values)
+            {
+                bool matched = false;
+                for (int j = 0; j < patterns.Length; j++)
+                {
+                    if (patterns[j].IsMatch(value))
+                    {
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched)
+                    yield return value;
+            }
+        }
+    }
+}
+"@
+
 $Script:HtmlStyle = @"
 h1, h2, h3, h4, p, li, td, th {
     color: black;
@@ -214,7 +253,8 @@ Function ConvertTo-HtmlTable
         [Parameter()] [string[]] $RightAlignProperty,
         [Parameter()] [string[]] $NoWrapProperty,
         [Parameter()] [switch] $Narrow,
-        [Parameter()] [string] $NoContentHtml
+        [Parameter()] [string] $NoContentHtml,
+        [Parameter()] [string[]] $ExcludeProperty
     )
     Begin
     {
@@ -231,6 +271,11 @@ Function ConvertTo-HtmlTable
         if (-not $Property)
         {
             $Property = $inputObjectList[0].PSObject.Properties.Name
+        }
+
+        if ($ExcludeProperty)
+        {
+            $Property = [Rhodium.HtmlReporting.HtmlReportingHelpers]::ExcludeLikeAny($Property, $ExcludeProperty)
         }
 
         foreach ($p in $Property) { $headerList.Add($p) }

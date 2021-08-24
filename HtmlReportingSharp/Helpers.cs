@@ -34,5 +34,31 @@ namespace HtmlReportingSharp
                 return ((object[])Object).Where(o => o != null).Select(o => o.ToString()).ToArray();
             return new string[] { Object.ToString() };
         }
+
+        public static IEnumerable<string> ExcludeLikeAny(string[] Values, string[] Filters)
+        {
+            if (Filters == null)
+                foreach (var filter in Filters)
+                    yield return filter;
+                
+            var patterns = new WildcardPattern[Filters.Length];
+            for (int i = 0; i < Filters.Length; i++)
+                patterns[i] = new WildcardPattern(Filters[i], WildcardOptions.IgnoreCase);
+
+            foreach (string value in Values)
+            {
+                bool matched = false;
+                for (int j = 0; j < patterns.Length; j++)
+                {
+                    if (patterns[j].IsMatch(value))
+                    {
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched)
+                    yield return value;
+            }
+        }
     }
 }

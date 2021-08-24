@@ -18,6 +18,9 @@ namespace HtmlReportingSharp
         public string[] Property { get; set; }
 
         [Parameter()]
+        public string[] ExcludeProperty { get; set; }
+
+        [Parameter()]
         public string[] HtmlProperty { get; set; }
 
         [Parameter()]
@@ -137,6 +140,9 @@ namespace HtmlReportingSharp
 
             if (Property == null && inputObjectList.Count != 0)
                 Property = inputObjectList[0].Properties.Select(p => p.Name).ToArray();
+
+            if (ExcludeProperty != null)
+                Property = Helpers.ExcludeLikeAny(Property, ExcludeProperty).ToArray();
             
             if (inputObjectList.Count != 0)
                 foreach (var p in Property)

@@ -111,6 +111,12 @@
                 $resultXml = [xml]$result
                 $resultXml.SelectNodes('//tbody/tr[1]/td[1]').'#text' | Should Be "1 Two"
             }
+
+            It "Works with ExcludeProperty" {
+                $result = [pscustomobject]@{Bad=1; Good=2} | ConvertTo-HtmlTable -ExcludeProperty B*
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//thead/tr[1]/th[1]').'#text' | Should Be "Good"
+            }
         }
     }
 }
