@@ -1181,6 +1181,7 @@ Function GenerateHtmlTagFunctions
     $other['option'] = 'value'
     $other['textarea'] = 'name', 'rows', 'cols'
     $other['button'] = 'type', 'onclick'
+    $other['span'] = 'title'
 
     foreach ($private:t in 'html', 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a',
         'form', 'input', 'button', 'select', 'option', 'textarea', 'button')

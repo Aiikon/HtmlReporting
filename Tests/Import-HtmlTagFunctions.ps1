@@ -34,5 +34,10 @@ Describe "Import-HtmlTagFunctions" {
             span Words -class abc, def -style "font-weight:bold;", "font-style:italic;" |
                 Should Be "<span class='abc def' style='font-weight:bold; font-style:italic;'>Words</span>"
         }
+
+        It "span has title" {
+            span abc -title def |
+                Should Be "<span title='def'>abc</span>"
+        }
     }
 }
