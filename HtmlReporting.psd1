@@ -98,6 +98,7 @@ FunctionsToExport = @(
     'Get-HtmlReportColor'
     'Get-HtmlImgTag'
     'Get-HtmlIndicatorText'
+    'Get-HtmlSelect'
     'Convert-PSCodeToHtml'
     'Import-HtmlTagFunctions'
     'Get-HtmlFragment'

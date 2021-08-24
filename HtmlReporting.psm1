@@ -974,6 +974,74 @@ Function Get-HtmlIndicatorText
     }
 }
 
+Function Get-HtmlSelect
+{
+    [CmdletBinding(PositionalBinding=$false,DefaultParameterSetName='Values')]
+    Param
+    (
+        [Parameter(ParameterSetName='Pipeline',ValueFromPipeline=$true)] [object] $InputObject,
+        [Parameter(ParameterSetName='Pipeline',Mandatory=$true)] [string] $ValueProperty,
+        [Parameter(ParameterSetName='Pipeline')] [string] $LabelProperty,
+        [Parameter(ParameterSetName='Pipeline')] [string] $IsSelectedProperty,
+        [Parameter(ParameterSetName='Values',Mandatory=$true)] [string[]] $Values,
+        [Parameter()] [string[]] $SelectedValues,
+        [Parameter(ParameterSetName='Dictionary',Mandatory=$true)] [System.Collections.IDictionary] $ValueLabelDictionary,
+        [Parameter()] [switch] $Required,
+        [Parameter()] [switch] $Multiple,
+        [Parameter()] [string] $Id,
+        [Parameter()] [string] $Name,
+        [Parameter()] [string[]] $Class,
+        [Parameter()] [string[]] $Style,
+        [Parameter()] [int] $Size
+    )
+    Begin
+    {
+        trap { $PSCmdlet.ThrowTerminatingError($_) }
+        if ($IsSelectedProperty -and $SelectedValues) { throw "IsSelectedProperty and SelectedValues can't be provided together." }
+        $valueLabelDict = if ($PSCmdlet.ParameterSetName -eq 'Dictionary') { $ValueLabelDictionary } else { [ordered]@{} }
+        $selectedValueDict = @{}
+
+        if ($PSCmdlet.ParameterSetName -eq 'Values')
+        {
+            foreach ($v in $Values) { $valueLabelDict[$v] = $v }
+        }
+        if ($SelectedValues)
+        {
+            foreach ($v in $SelectedValues) { $selectedValueDict[$v] = $true }
+        }
+    }
+    Process
+    {
+        if (!$InputObject -or $PSCmdlet.ParameterSetName -ne 'Pipeline') { return }
+        $value = [string]$InputObject.$ValueProperty
+        $label = if ($LabelProperty) { $InputObject.$LabelProperty } else { $value }
+        if ($IsSelectedProperty -and $InputObject.$IsSelectedProperty) { $selectedValueDict[$value] = $true }
+        $valueLabelDict[$value] = $label
+    }
+    End
+    {
+        $result = [System.Text.StringBuilder]::new()
+        [void]$result.Append("<select")
+        if ($Required) { [void]$result.Append(" required='required'") }
+        if ($Multiple) { [void]$result.Append(" multiple='multiple'") }
+        if ($Id) { [void]$result.AppendFormat(" id='{0}'", [System.Web.HttpUtility]::HtmlAttributeEncode($Id)) }
+        if ($Name) { [void]$result.AppendFormat(" name='{0}'", [System.Web.HttpUtility]::HtmlAttributeEncode($Name)) }
+        if ($Class) { [void]$result.AppendFormat(" class='{0}'", [System.Web.HttpUtility]::HtmlAttributeEncode($Class -join ' ')) }
+        if ($Style) { [void]$result.AppendFormat(" style='{0}'", $Style.Replace("'", "''") -join ' ') }
+        if ($PSBoundParameters.ContainsKey('Size') -and $Size -eq 0) { $Size = @($valueLabelDict.GetEnumerator()).Count }
+        if ($Size) { [void]$result.Append(" size='$Size'") }
+        [void]$result.Append(">")
+        foreach ($pair in $valueLabelDict.GetEnumerator()) {
+            $value = [string]$pair.Key
+            $label = $pair.Value
+            $selectedAttr = if ($selectedValueDict[$value]) { " selected='selected'" }
+            [void]$result.Append("<option value='$([System.Web.HttpUtility]::HtmlAttributeEncode($value))'$selectedAttr>$([System.Web.HttpUtility]::HtmlEncode($label))</option>")
+        }
+        [void]$result.Append("</select>")
+        $result.ToString()
+    }
+}
+
 Function Convert-PSCodeToHtml
 {
     [CmdletBinding()]
