@@ -1219,16 +1219,17 @@ Function GenerateHtmlTagFunctions
     $private:functionHash = @{}
         
     $private:other = @{}
-    $other['a'] = 'name', 'href', 'target'
+    $other['a'] = 'name', 'href', 'target', 'onclick'
     $other['form'] = 'action', 'method'
     $other['input'] = 'type', 'name', 'value'
     $other['option'] = 'value'
     $other['textarea'] = 'name', 'rows', 'cols'
-    $other['button'] = 'type', 'onclick'
+    $other['button'] = 'type', 'onclick', 'name', 'value'
+    $other['label'] = 'for'
     $other['span'] = 'title'
 
     foreach ($private:t in 'html', 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a',
-        'form', 'input', 'button', 'option', 'textarea', 'button')
+        'form', 'input', 'button', 'option', 'textarea', 'button', 'label')
     {
         $functionHash[$t] = [ScriptBlock]::Create("
         [CmdletBinding(PositionalBinding=`$false)]
@@ -1262,6 +1263,8 @@ Function GenerateHtmlTagFunctions
     }
     $functionHash['br'] = { "<br />" }
     $functionHash['hr'] = { "<hr />" }
+    $functionHash['script'] = { param($private:script) "<script>$private:script</script>" }
+    $functionHash['style'] = { param($private:style) "<style>$private:style</style>" }
 
     $Script:HtmlTagFunctionHash = $functionHash
 }

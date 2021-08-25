@@ -39,5 +39,15 @@ Describe "Import-HtmlTagFunctions" {
             span abc -title def |
                 Should Be "<span title='def'>abc</span>"
         }
+
+        It "Generates a script function" {
+            script "function test() { }" |
+                Should Be "<script>function test() { }</script>"
+        }
+
+        It "Generates a style function" {
+            style "class { }" |
+                Should Be "<style>class { }</style>"
+        }
     }
 }
