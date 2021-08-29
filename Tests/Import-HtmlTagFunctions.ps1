@@ -40,6 +40,14 @@ Describe "Import-HtmlTagFunctions" {
                 Should Be "<span title='def'>abc</span>"
         }
 
+        It "br exists" {
+            br | Should Be "<br />"
+        }
+
+        It "br supports clear" {
+            br -clear all | Should Be "<br clear='all' />"
+        }
+
         It "Generates a script function" {
             script "function test() { }" |
                 Should Be "<script>function test() { }</script>"

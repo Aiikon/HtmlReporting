@@ -1261,7 +1261,7 @@ Function GenerateHtmlTagFunctions
         )
         ""<`$tag`$otherCode>"", (`$text -join ' '), ""</`$tag>"" -join ''")
     }
-    $functionHash['br'] = { "<br />" }
+    $functionHash['br'] = { param($clear) "<br$(if ($clear) { " clear='$clear'" }) />" }
     $functionHash['hr'] = { "<hr />" }
     $functionHash['script'] = { param($private:script) "<script>$private:script</script>" }
     $functionHash['style'] = { param($private:style) "<style>$private:style</style>" }
