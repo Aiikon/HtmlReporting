@@ -60,6 +60,9 @@ namespace HtmlReportingSharp
         public SwitchParameter Narrow { get; set; }
 
         [Parameter()]
+        public SwitchParameter AutoDetectHtml { get; set; }
+
+        [Parameter()]
         public string NoContentHtml { get; set; }
         
         private List<PSObject> inputObjectList = new List<PSObject>();
@@ -246,7 +249,7 @@ namespace HtmlReportingSharp
                     if (inputObject.Properties[header] != null && inputObject.Properties[header].Value != null)
                         cellValue = String.Join(" ", Helpers.ConvertObjectToStringArray(inputObject.Properties[header].Value));
 
-                    if (!HtmlProperty.Contains(header))
+                    if (!HtmlProperty.Contains(header) && !AutoDetectHtml.IsPresent && (cellValue.Length == 0 || cellValue.Substring(0,1) != "<"))
                         cellValue = System.Web.HttpUtility.HtmlEncode(cellValue).Replace("\r\n", "<br />");
 
                     if (RightAlignProperty.Contains(header))

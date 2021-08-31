@@ -117,6 +117,17 @@
                 $resultXml = [xml]$result
                 $resultXml.SelectNodes('//thead/tr[1]/th[1]').'#text' | Should Be "Good"
             }
+
+            It "Works with AutoDetectHtml" {
+                $result = [pscustomobject]@{Col1="<strong>Text</strong>"; Col2="Basic < text"} |
+                    ConvertTo-HtmlTable -AutoDetectHtml
+                
+                $result -join '' -match "Basic < text" | Should Be $true
+
+                $resultXml = [xml]($result -replace "Basic < text", 'Basic text')
+                $resultXml.SelectNodes('//tbody/tr[1]/td[1]').innerXml | Should Be "<strong>Text</strong>"
+                $resultXml.SelectNodes('//tbody/tr[1]/td[2]').innerXml | Should Be "Basic text"
+            }
         }
     }
 }

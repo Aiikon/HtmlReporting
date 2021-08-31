@@ -253,6 +253,7 @@ Function ConvertTo-HtmlTable
         [Parameter()] [string[]] $RightAlignProperty,
         [Parameter()] [string[]] $NoWrapProperty,
         [Parameter()] [switch] $Narrow,
+        [Parameter()] [switch] $AutoDetectHtml,
         [Parameter()] [string] $NoContentHtml,
         [Parameter()] [string[]] $ExcludeProperty
     )
@@ -359,11 +360,11 @@ Function ConvertTo-HtmlTable
                 foreach ($value in $cellClassDict[$header]) { $cellClassList.Add($value) }
                 foreach ($value in $cellStyleDict[$header]) { $cellStyleList.Add($value) }
 
-                $cellValue = $object.$header
+                $cellValue = "$($object.$header)"
 
-                if ($header -notin $HtmlProperty)
+                if ($header -notin $HtmlProperty -and !$AutoDetectHtml.IsPresent -and ($cellValue.Length -eq 0 -or $cellValue.Substring(0,1) -ne '<'))
                 {
-                    $cellValue = [System.Web.HttpUtility]::HtmlEncode("$cellValue").Replace("`r`n", '<br />')
+                    $cellValue = [System.Web.HttpUtility]::HtmlEncode($cellValue).Replace("`r`n", '<br />')
                 }
 
                 if ($header -in $RightAlignProperty) { $cellClassList.Add('ralign') }
