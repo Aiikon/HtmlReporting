@@ -128,6 +128,16 @@
                 $resultXml.SelectNodes('//tbody/tr[1]/td[1]').innerXml | Should Be "<strong>Text</strong>"
                 $resultXml.SelectNodes('//tbody/tr[1]/td[2]').innerXml | Should Be "Basic text"
             }
+
+            It "Works with AddDataColumnName" {
+                $result = [pscustomobject]@{Col1="Text1"; Col2="Text2"} |
+                    ConvertTo-HtmlTable -AddDataColumnName
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//thead/tr[1]/th[1]').'data-column-name' | Should Be 'Col1'
+                $resultXml.SelectNodes('//thead/tr[1]/th[2]').'data-column-name' | Should Be 'Col2'
+                $resultXml.SelectNodes('//tbody/tr[1]/td[1]').'data-column-name' | Should Be 'Col1'
+                $resultXml.SelectNodes('//tbody/tr[1]/td[2]').'data-column-name' | Should Be 'Col2'
+            }
         }
     }
 }

@@ -63,6 +63,9 @@ namespace HtmlReportingSharp
         public SwitchParameter AutoDetectHtml { get; set; }
 
         [Parameter()]
+        public SwitchParameter AddDataColumnName { get; set; }
+
+        [Parameter()]
         public string NoContentHtml { get; set; }
         
         private List<PSObject> inputObjectList = new List<PSObject>();
@@ -171,10 +174,13 @@ namespace HtmlReportingSharp
                 resultBuilder.Append("<tr class='header'>\r\n");
                 foreach (string header in headerList)
                 {
+                    resultBuilder.Append("<th");
+                    if (AddDataColumnName.IsPresent)
+                        resultBuilder.AppendFormat(" data-column-name='{0}'", System.Web.HttpUtility.HtmlAttributeEncode(header));
                     if (renameHeaderDict.ContainsKey(header))
-                        resultBuilder.Append(String.Format("<th>{0}</th>\r\n", renameHeaderDict[header]));
+                        resultBuilder.Append(String.Format(">{0}</th>\r\n", renameHeaderDict[header]));
                     else
-                        resultBuilder.Append(String.Format("<th>{0}</th>\r\n", header));
+                        resultBuilder.Append(String.Format(">{0}</th>\r\n", header));
                 }
                 resultBuilder.Append("</tr>\r\n");
                 resultBuilder.Append("</thead>\r\n");
@@ -285,6 +291,9 @@ namespace HtmlReportingSharp
 
                     if (cellStyleList.Count > 0)
                         resultBuilder.AppendFormat(" style='{0}'", String.Join(" ", cellStyleList));
+
+                    if (AddDataColumnName.IsPresent)
+                        resultBuilder.AppendFormat(" data-column-name='{0}'", System.Web.HttpUtility.HtmlAttributeEncode(header));
 
                     resultBuilder.AppendFormat(">{0}</td>\r\n", cellValue);
                 }

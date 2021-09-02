@@ -254,6 +254,7 @@ Function ConvertTo-HtmlTable
         [Parameter()] [string[]] $NoWrapProperty,
         [Parameter()] [switch] $Narrow,
         [Parameter()] [switch] $AutoDetectHtml,
+        [Parameter()] [switch] $AddDataColumnName,
         [Parameter()] [string] $NoContentHtml,
         [Parameter()] [string[]] $ExcludeProperty
     )
@@ -292,7 +293,8 @@ Function ConvertTo-HtmlTable
             foreach ($header in $headerList)
             {
                 if ($RenameHeader[$header]) { $header = $RenameHeader[$header] }
-                $resultList.Add("<th>$header</th>")
+                $attrDcn = if ($AddDataColumnName) { " data-column-name='$([System.Web.HttpUtility]::HtmlAttributeEncode($header))'" }
+                $resultList.Add("<th$attrDcn>$header</th>")
             }
             $resultList.Add("</tr>")
             $resultList.Add("</thead>")
@@ -409,7 +411,8 @@ Function ConvertTo-HtmlTable
                     }
                 }
 
-                $resultList.Add("<td$colspanHtml$rowspanHtml$classHtml$styleHtml>$cellValue</td>")
+                $attrDcn = if ($AddDataColumnName) { " data-column-name='$([System.Web.HttpUtility]::HtmlAttributeEncode($header))'" }
+                $resultList.Add("<td$colspanHtml$rowspanHtml$classHtml$styleHtml$attrDcn>$cellValue</td>")
             }
 
             $resultList.Add('</tr>')
