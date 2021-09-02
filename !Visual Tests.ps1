@@ -121,6 +121,7 @@ Get-HtmlFragment {
     h2 Assorted HTML Table Tests
 
     Get-ChildItem C:\Windows |
+        Select-Object Name, LastWriteTime |
         ConvertTo-HtmlTable -NoWrapProperty * -RightAlignProperty Name -Narrow -RowClassScript {
             if ($_.Name -match 'boot') { 'red' }
         } -RowStyleScript {
