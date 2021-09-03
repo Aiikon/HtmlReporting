@@ -38,8 +38,8 @@ namespace Rhodium.HtmlReporting
         public static IEnumerable<string> ExcludeLikeAny(string[] Values, string[] Filters)
         {
             if (Filters == null)
-                foreach (var filter in Filters)
-                    yield return filter;
+                foreach (string value in Values)
+                    yield return value;
                 
             var patterns = new WildcardPattern[Filters.Length];
             for (int i = 0; i < Filters.Length; i++)
@@ -59,6 +59,78 @@ namespace Rhodium.HtmlReporting
                 if (!matched)
                     yield return value;
             }
+        }
+
+        public static IEnumerable<string> GetStringsLike(string[] Values, string[] Like, string[] NotLike, bool LikeDefaultsToWildcard = true)
+        {
+            if (Values == null || Values.Length == 0)
+                yield break;
+
+            bool hasLike = Like != null && Like.Length > 0;
+            bool hasNotLike = NotLike != null && NotLike.Length > 0;
+            bool likeIsWildcard = hasLike && Like[0] == "*";
+
+            if (!LikeDefaultsToWildcard && !hasLike)
+                yield break;
+
+            if (Like == null)
+                Like = new string[0] {};
+            if (NotLike == null)
+                NotLike = new string[0] {};
+
+            var likePatterns = new WildcardPattern[Like.Length];
+            for (int i = 0; i < Like.Length; i++)
+                likePatterns[i] = new WildcardPattern(Like[i], WildcardOptions.IgnoreCase);
+
+            var notLikePatterns = new WildcardPattern[NotLike.Length];
+            for (int i = 0; i < NotLike.Length; i++)
+                notLikePatterns[i] = new WildcardPattern(NotLike[i], WildcardOptions.IgnoreCase);
+
+            foreach (string value in Values)
+            {
+                if (hasNotLike)
+                {
+                    for (int j = 0; j < notLikePatterns.Length; j++)
+                    {
+                        if (notLikePatterns[j].IsMatch(value))
+                        {
+                            goto nextValue;
+                        }
+                    }
+                }
+
+                if (likeIsWildcard)
+                {
+                    yield return value;
+                    continue;
+                }
+
+                if (hasLike)
+                {
+                    for (int j = 0; j < likePatterns.Length; j++)
+                    {
+                        if (likePatterns[j].IsMatch(value))
+                        {
+                            yield return value;
+                            goto nextValue;
+                        }
+                    }
+                    continue;
+                }
+
+                yield return value;
+
+                nextValue:
+                    continue;
+            }
+        }
+
+        public static Hashtable GetStringsLikeHashtable(string[] Values, string[] Like, string[] NotLike, bool LikeDefaultsToWildcard = true)
+        {
+            var hashtable = new Hashtable(StringComparer.CurrentCultureIgnoreCase);
+            foreach (string match in GetStringsLike(Values, Like, NotLike, LikeDefaultsToWildcard))
+                hashtable[match] = true;
+            return hashtable;
         }
     }
 }
@@ -436,29 +508,41 @@ Function ConvertTo-HtmlStrongText
         [Parameter(ValueFromPipeline=$true, Position=0)] [object] $InputObject,
         [Parameter()] [ValidateSet('SameLine', 'MultiLine', 'MultiLineIndent', 'MultiLineHorizontal', 'MultiLineIndentHorizontal')] [string] $Mode = 'MultiLine',
         [Parameter()] [switch] $NoEmptyValues,
-        [Parameter()] [string[]] $HtmlProperty
+        [Parameter()] [string[]] $Property,
+        [Parameter()] [string[]] $ExcludeProperty,
+        [Parameter()] [string[]] $HtmlProperty,
+        [Parameter()] [string[]] $ExcludeHtmlProperty,
+        [Parameter()] [switch] $AutoHtmlProperty
     )
     Process
     {
         if (!$InputObject) { return }
-        $blockList = foreach ($property in $InputObject.PSObject.Properties)
+        $propertyHash = [Rhodium.HtmlReporting.HtmlReportingHelpers]::GetStringsLikeHashtable($InputObject.PSObject.Properties.Name, $Property, $ExcludeProperty)
+        $htmlPropertyHash = [Rhodium.HtmlReporting.HtmlReportingHelpers]::GetStringsLikeHashtable($InputObject.PSObject.Properties.Name, $HtmlProperty, $ExcludeHtmlProperty, $false)
+        $blockList = foreach ($psProperty in $InputObject.PSObject.Properties)
         {
-            $name = Get-HtmlEncodedText $property.Name
-            $value = $property.Value
+            if (!$propertyHash[$psProperty.Name]) { continue }
+
+            $value = $psProperty.Value
             if ($NoEmptyValues.IsPresent -and [String]::IsNullOrWhiteSpace($value)) { continue }
-            if ($name -notin $HtmlProperty) { $value = Get-HtmlEncodedText $value -InsertBr }
-            
+            if (!(($AutoHtmlProperty.IsPresent -and $value.Length -and $value.Substring(0,1) -eq '<') -or $htmlPropertyHash[$psProperty.Name]))
+            {
+                $value = Get-HtmlEncodedText $value -InsertBr
+            }
+
+            $name = Get-HtmlEncodedText $psProperty.Name
+
             if ($Mode -eq "SameLine")
             {
                 $block = "<strong>${name}:</strong> $value"
             }
             elseif ($Mode -in "MultiLine", "MultiLineHorizontal")
             {
-                $block = "<p><strong>$name</strong></br>$value</p>"
+                $block = "<p><strong>$name</strong><br />$value</p>"
             }
             elseif ($Mode -in "MultiLineIndent", "MultiLineIndentHorizontal")
             {
-                $block = "<p><strong>$name</strong></br><span style='margin-left:1em;'>$value</span></p>"
+                $block = "<p><strong>$name</strong><br /><span style='margin-left:1em;'>$value</span></p>"
             }
 
             if ($Mode -in "MultiLineHorizontal", "MultiLineIndentHorizontal")
