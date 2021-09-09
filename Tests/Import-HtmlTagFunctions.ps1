@@ -1,4 +1,5 @@
 ﻿Import-Module $PSScriptRoot\.. -DisableNameChecking -Force
+Remove-Module -Name HtmlReportingTagFunctions -ErrorAction Ignore
 
 Describe "Import-HtmlTagFunctions" {
     Context "Default" {
@@ -46,6 +47,10 @@ Describe "Import-HtmlTagFunctions" {
 
         It "br supports clear" {
             br -clear all | Should Be "<br clear='all' />"
+        }
+
+        It "Generates a small function" {
+            small "text" | Should Be "<small>text</small>"
         }
 
         It "Generates a script function" {
