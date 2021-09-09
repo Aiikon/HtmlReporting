@@ -1,4 +1,7 @@
-﻿foreach ($value in $true, $false)
+﻿#Requires -Modules @{ ModuleName="Pester"; ModuleVersion="3.4.0" }
+Import-Module Pester -MaximumVersion 3.4.0
+
+foreach ($value in $true, $false)
 {
     $Global:2e128b9186234521b3ab5ce70cc83360_ForceLoadPowerShellCmdlets = $value
     Import-Module $PSScriptRoot\.. -DisableNameChecking -Force
@@ -137,6 +140,58 @@
                 $resultXml.SelectNodes('//thead/tr[1]/th[2]').'data-column-name' | Should Be 'Col2'
                 $resultXml.SelectNodes('//tbody/tr[1]/td[1]').'data-column-name' | Should Be 'Col1'
                 $resultXml.SelectNodes('//tbody/tr[1]/td[2]').'data-column-name' | Should Be 'Col2'
+            }
+
+            It "Works with Colspan" {
+                $result = @(
+                    [pscustomobject]@{A=1;B=2;C=3;D='-'}
+                ) |
+                    ConvertTo-HtmlTable -Class Grid -CellColspanScripts @{
+                        A = { if ($_.A -eq 1) { 1 } }
+                        B = { if ($_.B -eq 2) { 2 } }
+                    }
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr').Count | Should Be 1
+                $resultXml.SelectNodes('//tbody/tr[1]').InnerXml | Should Be '<td>1</td><td colspan="2">2</td><td>-</td>'
+            }
+
+            It "Works with Rowspan" {
+                $result = @(
+                    [pscustomobject]@{A=1;B=2;C=3;D='-'}
+                    [pscustomobject]@{A=4;B=5;C=6;D='-'}
+                ) |
+                    ConvertTo-HtmlTable -Class Grid -CellRowspanScripts @{
+                        A = { if ($_.A -eq 1) { 1 } }
+                        B = { if ($_.B -eq 2) { 2 } }
+                    }
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr').Count | Should Be 2
+                $resultXml.SelectNodes('//tbody/tr[1]').InnerXml | Should Be '<td>1</td><td rowspan="2">2</td><td>3</td><td>-</td>'
+                $resultXml.SelectNodes('//tbody/tr[2]').InnerXml | Should Be '<td>4</td><td>6</td><td>-</td>'
+            }
+
+            It "Works with Rowspan and Colspan" {
+                $result = @(
+                    [pscustomobject]@{A=1;B=2;C=3;D='-'}
+                    [pscustomobject]@{A=4;B=5;C=6;D='-'}
+                    [pscustomobject]@{A=7;B=8;C=9;D='-'}
+                    [pscustomobject]@{A=10;B=11;C=12;D='-'}
+                    [pscustomobject]@{A=13;B=14;C=15;D='-'}
+                ) |
+                    ConvertTo-HtmlTable -Class Grid -CellColspanScripts @{
+                        B = { if ($_.B -eq 2) { 2 } elseif ($_.B -eq 5) { 2 } }
+                    } -CellRowspanScripts @{
+                        A = { if ($_.A -eq 4) { 2 } }
+                        B = { if ($_.B -eq 5) { 2 } }
+                        C = { if ($_.C -eq 12) { 2 } }
+                    }
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr').Count | Should Be 5
+                $resultXml.SelectNodes('//tbody/tr[1]').InnerXml | Should Be '<td>1</td><td colspan="2">2</td><td>-</td>'
+                $resultXml.SelectNodes('//tbody/tr[2]').InnerXml | Should Be '<td rowspan="2">4</td><td colspan="2" rowspan="2">5</td><td>-</td>'
+                $resultXml.SelectNodes('//tbody/tr[3]').InnerXml | Should Be '<td>-</td>'
+                $resultXml.SelectNodes('//tbody/tr[4]').InnerXml | Should Be '<td>10</td><td>11</td><td rowspan="2">12</td><td>-</td>'
+                $resultXml.SelectNodes('//tbody/tr[5]').InnerXml | Should Be '<td>13</td><td>14</td><td>-</td>'
             }
         }
     }

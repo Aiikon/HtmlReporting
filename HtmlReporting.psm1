@@ -376,6 +376,8 @@ Function ConvertTo-HtmlTable
         if (!$inputObjectList.Count -and $NoContentHtml) { $resultList.Add($NoContentHtml) }
 
         $rowspanCountHash = @{}
+        $colspanRowHash = @{}
+        $colspanCountHash = @{}
 
         foreach ($object in $inputObjectList)
         {
@@ -416,16 +418,23 @@ Function ConvertTo-HtmlTable
             foreach ($header in $headerList)
             {
                 $skipCell = $false
+                if ($colspanRowHash[$header] -gt 0)
+                {
+                    $colspanRowHash[$header] -= 1
+                    $colspanCount = $colspanCountHash[$header]
+                    $skipCell = $true
+                }
+                if ($rowspanCountHash[$header] -gt 0)
+                {
+                    $rowspanCountHash[$header] -= 1
+                    $skipCell = $true
+                }
                 if ($colspanCount -gt 0)
                 {
                     $colspanCount -= 1
                     $skipCell = $true
                 }
-                if ($rowspanCountHash.$header -gt 0)
-                {
-                    $rowspanCountHash.$header -= 1
-                    $skipCell = $true
-                }
+
                 if ($skipCell) { continue }
 
                 $cellClassList = [System.Collections.Generic.List[string]]::new($rowClassList)
@@ -449,38 +458,44 @@ Function ConvertTo-HtmlTable
                 if ($cellClassList) { $classHtml = " class='$($cellClassList -join ' ')'" }
                 if ($cellStyleList) { $styleHtml = " style='$($cellStyleList -join ' ')'" }
                 
+                $setColspan = $false
                 $colspanHtml = ''
                 if ($CellColspanScripts[$header])
                 {
-                    $colspanCount = $CellColspanScripts.$header
+                    $colspanCount = $CellColspanScripts[$header]
                     if ($colspanCount -is [scriptblock]) { $colspanCount = $object | ForEach-Object $colspanCount | Select-Object -First 1 }
                     else { $colspanCount = [int]$object.$colspanCount }
                     if ($colspanCount -gt 1)
                     {
                         $colspanHtml = " colspan='$colspanCount'"
                         $colspanCount -= 1
+                        $setColspan = $true
                     }
                     else
                     {
                         $colspanCount = 0
                     }
                 }
+
+                $setRowspan = $false
                 $rowspanHtml = ''
                 if ($CellRowspanScripts[$header])
                 {
-                    $rowspanCount = $CellRowspanScripts.$header
+                    $rowspanCount = $CellRowspanScripts[$header]
                     if ($rowspanCount -is [scriptblock]) { $rowspanCount = $object | ForEach-Object $rowspanCount | Select-Object -First 1 }
                     else { $rowspanCount = [int]$object.$rowspanCount }
                     if ($rowspanCount -gt 1)
                     {
                         $rowspanHtml = " rowspan='$rowspanCount'"
-                        $rowspanCount -= 1
-                        $rowspanCountHash.$header = $rowspanCount
+                        $rowspanCountHash[$header] = $rowspanCount - 1
+                        $setRowspan = $true
                     }
-                    else
-                    {
-                        $rowspanCount = 0
-                    }
+                }
+
+                if ($setRowspan -and $setColspan)
+                {
+                    $colspanRowHash[$header] = $rowspanCount - 1
+                    $colspanCountHash[$header] = $colspanCount + 1
                 }
 
                 $attrDcn = if ($AddDataColumnName) { " data-column-name='$([System.Web.HttpUtility]::HtmlAttributeEncode($header))'" }

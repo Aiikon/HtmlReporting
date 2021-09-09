@@ -191,6 +191,8 @@ namespace HtmlReportingSharp
                 resultBuilder.Append(NoContentHtml);
 
             var rowspanCountHash = new Dictionary<string, int>();
+            var colspanRowHash = new Dictionary<string, int>();
+            var colspanCountHash = new Dictionary<string, int>();
 
             foreach (var inputObject in inputObjectList)
             {
@@ -228,6 +230,12 @@ namespace HtmlReportingSharp
                 foreach (var header in headerList)
                 {
                     bool skipCell = false;
+                    if (colspanRowHash.ContainsKey(header) && colspanRowHash[header] > 0)
+                    {
+                        colspanRowHash[header] = colspanRowHash[header] - 1;
+                        colspanCount = colspanCountHash[header];
+                        skipCell = true;
+                    }
                     if (colspanCount > 0)
                     {
                         colspanCount--;
@@ -266,6 +274,7 @@ namespace HtmlReportingSharp
 
                     resultBuilder.Append("<td");
 
+                    bool setColspan = false;
                     if (CellColspanScripts != null && CellColspanScripts.Contains(header))
                     {
                         colspanCount = GetCountFromProperty(inputObject, CellColspanScripts, header);
@@ -273,17 +282,31 @@ namespace HtmlReportingSharp
                         {
                             resultBuilder.AppendFormat(" colspan='{0}'", colspanCount);
                             colspanCount--;
+                            setColspan = true;
+                        }
+                        else
+                        {
+                            colspanCount = 0;
                         }
                     }
 
+                    int rowspanCount = 0;
+                    bool setRowspan = false;
                     if (CellRowspanScripts != null && CellRowspanScripts.Contains(header))
                     {
-                        rowspanCountHash[header] = GetCountFromProperty(inputObject, CellRowspanScripts, header);
-                        if (rowspanCountHash[header] > 1)
+                        rowspanCount = GetCountFromProperty(inputObject, CellRowspanScripts, header);
+                        if (rowspanCount > 1)
                         {
-                            resultBuilder.AppendFormat(" rowspan='{0}'", rowspanCountHash[header]);
-                            rowspanCountHash[header] = rowspanCountHash[header] - 1;
+                            resultBuilder.AppendFormat(" rowspan='{0}'", rowspanCount);
+                            rowspanCountHash[header] = rowspanCount - 1;
+                            setRowspan = true;
                         }
+                    }
+
+                    if (setRowspan && setColspan)
+                    {
+                        colspanRowHash[header] = rowspanCount - 1;
+                        colspanCountHash[header] = colspanCount + 1;
                     }
 
                     if (cellClassList.Count > 0)
