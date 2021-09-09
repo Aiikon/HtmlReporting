@@ -205,6 +205,18 @@ table.HtmlReportingTable th.nowrap {
 table.HtmlReportingTable .ralign {
     text-align: right;
 }
+table.HtmlReportingTable.Grid th {
+    padding: 1px 2px 1px 2px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: black;
+}
+table.HtmlReportingTable.Grid td {
+    padding: 1px 2px 1px 2px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: black;
+}
 
 .IndicatorText {
     color: white;
