@@ -36,10 +36,10 @@ Describe "ConvertTo-HtmlStrongText" {
                 Should Be "<p><strong>A</strong><br /><i>Test</i></p>`r`n<p><strong>B</strong><br /><i>Test</i></p>"
         }
 
-        It "AutoHtmlProperty Test" {
-            [pscustomobject]@{A='<i>Test</i>'; B='Test < Other'} |
-                ConvertTo-HtmlStrongText -AutoHtmlProperty |
-                Should Be "<p><strong>A</strong><br /><i>Test</i></p>`r`n<p><strong>B</strong><br />Test &lt; Other</p>"
+        It "AutoDetectHtml Test" {
+            [pscustomobject]@{A='<i>Test</i>'; B='Test < Other'; C="Line`r`nBreak"} |
+                ConvertTo-HtmlStrongText -AutoDetectHtml |
+                Should Be "<p><strong>A</strong><br /><i>Test</i></p>`r`n<p><strong>B</strong><br />Test &lt; Other</p>`r`n<p><strong>C</strong><br />Line<br />Break</p>"
         }
     }
 }

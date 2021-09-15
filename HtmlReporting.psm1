@@ -539,7 +539,7 @@ Function ConvertTo-HtmlStrongText
         [Parameter()] [string[]] $ExcludeProperty,
         [Parameter()] [string[]] $HtmlProperty,
         [Parameter()] [string[]] $ExcludeHtmlProperty,
-        [Parameter()] [switch] $AutoHtmlProperty
+        [Parameter()] [switch] $AutoDetectHtml
     )
     Process
     {
@@ -552,7 +552,7 @@ Function ConvertTo-HtmlStrongText
 
             $value = $psProperty.Value
             if ($NoEmptyValues.IsPresent -and [String]::IsNullOrWhiteSpace($value)) { continue }
-            if (!(($AutoHtmlProperty.IsPresent -and $value.Length -and $value.Substring(0,1) -eq '<') -or $htmlPropertyHash[$psProperty.Name]))
+            if (!(($AutoDetectHtml.IsPresent -and $value.Length -and $value.Substring(0,1) -eq '<') -or $htmlPropertyHash[$psProperty.Name]))
             {
                 $value = Get-HtmlEncodedText $value -InsertBr
             }
