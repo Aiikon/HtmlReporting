@@ -263,7 +263,7 @@ namespace HtmlReportingSharp
                     if (inputObject.Properties[header] != null && inputObject.Properties[header].Value != null)
                         cellValue = String.Join(" ", Helpers.ConvertObjectToStringArray(inputObject.Properties[header].Value));
 
-                    if (!HtmlProperty.Contains(header) && !AutoDetectHtml.IsPresent && (cellValue.Length == 0 || cellValue.Substring(0,1) != "<"))
+                    if (!HtmlProperty.Contains(header) && !(AutoDetectHtml.IsPresent && cellValue.Length > 0 && cellValue.Substring(0,1) == "<"))
                         cellValue = System.Web.HttpUtility.HtmlEncode(cellValue).Replace("\r\n", "<br />");
 
                     if (RightAlignProperty.Contains(header))

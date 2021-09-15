@@ -122,14 +122,12 @@ foreach ($value in $true, $false)
             }
 
             It "Works with AutoDetectHtml" {
-                $result = [pscustomobject]@{Col1="<strong>Text</strong>"; Col2="Basic < text"} |
+                $result = [pscustomobject]@{Col1="<strong>Text</strong>"; Col2="Basic < text"; Col3="Line`r`nBreak"} |
                     ConvertTo-HtmlTable -AutoDetectHtml
-                
-                $result -join '' -match "Basic < text" | Should Be $true
-
-                $resultXml = [xml]($result -replace "Basic < text", 'Basic text')
+                $resultXml = [xml]$result
                 $resultXml.SelectNodes('//tbody/tr[1]/td[1]').innerXml | Should Be "<strong>Text</strong>"
-                $resultXml.SelectNodes('//tbody/tr[1]/td[2]').innerXml | Should Be "Basic text"
+                $resultXml.SelectNodes('//tbody/tr[1]/td[2]').innerXml | Should Be "Basic &lt; text"
+                $resultXml.SelectNodes('//tbody/tr[1]/td[3]').innerXml | Should Be "Line<br />Break"
             }
 
             It "Works with AddDataColumnName" {

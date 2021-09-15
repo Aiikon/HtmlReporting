@@ -457,7 +457,7 @@ Function ConvertTo-HtmlTable
 
                 $cellValue = "$($object.$header)"
 
-                if ($header -notin $HtmlProperty -and !$AutoDetectHtml.IsPresent -and ($cellValue.Length -eq 0 -or $cellValue.Substring(0,1) -ne '<'))
+                if (-not (($AutoDetectHtml.IsPresent -and $cellValue.Length -gt 0 -and $cellValue.Substring(0,1) -eq '<') -or $header -in $HtmlProperty))
                 {
                     $cellValue = [System.Web.HttpUtility]::HtmlEncode($cellValue).Replace("`r`n", '<br />')
                 }
