@@ -62,5 +62,24 @@ Describe "Import-HtmlTagFunctions" {
             style "class { }" |
                 Should Be "<style>class { }</style>"
         }
+
+        It "Generates tables" {
+            table @(
+                thead @(
+                    tr @(
+                        th "Col 1"
+                        th "Col 2"
+                    )
+                )
+                tbody @(
+                    tr @(
+                        td "Cell A"
+                        td "Cell B"
+                    )
+                )
+            ) |
+                Should Be '<table><thead><tr><th>Col 1</th> <th>Col 2</th></tr></thead> <tbody><tr><td>Cell A</td> <td>Cell B</td></tr></tbody></table>'
+            # ^ There will be spaces between thead and tbody and the tds because that's the default behavior, i.e p text1 text2
+        }
     }
 }
