@@ -217,6 +217,15 @@ table.HtmlReportingTable.Grid td {
     border-width: 1px;
     border-color: black;
 }
+table.HtmlReportingTable td.InsertSolidLine, table.HtmlReportingTable th.InsertSolidLine {
+    border-left: solid 1px black;
+}
+table.HtmlReportingTable td.InsertDashedLine, table.HtmlReportingTable th.InsertDashedLine {
+    border-left: dashed 1px black;
+}
+table.HtmlReportingTable td.InsertDottedLine, table.HtmlReportingTable th.InsertDottedLine {
+    border-left: dotted 1px black;
+}
 
 .IndicatorText {
     color: white;
@@ -326,6 +335,7 @@ Function ConvertTo-HtmlTable
         [Parameter()] [string[]] $Property,
         [Parameter()] [string[]] $HtmlProperty,
         [Parameter()] [string[]] $Class,
+        [Parameter()] [string] $Id,
         [Parameter()] [switch] $RowsOnly,
         [Parameter()] [scriptblock] $RowClassScript,
         [Parameter()] [scriptblock] $RowStyleScript,
@@ -336,11 +346,15 @@ Function ConvertTo-HtmlTable
         [Parameter()] [hashtable] $RenameHeader = @{},
         [Parameter()] [string[]] $RightAlignProperty,
         [Parameter()] [string[]] $NoWrapProperty,
+        [Parameter()] [switch] $Plain,
         [Parameter()] [switch] $Narrow,
         [Parameter()] [switch] $AutoDetectHtml,
         [Parameter()] [switch] $AddDataColumnName,
         [Parameter()] [string] $NoContentHtml,
-        [Parameter()] [string[]] $ExcludeProperty
+        [Parameter()] [string[]] $ExcludeProperty,
+        [Parameter()] [string[]] $InsertSolidLine,
+        [Parameter()] [string[]] $InsertDashedLine,
+        [Parameter()] [string[]] $InsertDottedLine
     )
     Begin
     {
@@ -366,21 +380,33 @@ Function ConvertTo-HtmlTable
 
         foreach ($p in $Property) { $headerList.Add($p) }
 
+        $lineClassDict = @{}
+        foreach ($p in $InsertSolidLine) { $lineClassDict[$p] = 'Solid' }
+        foreach ($p in $InsertDashedLine) { $lineClassDict[$p] = 'Dashed' }
+        foreach ($p in $InsertDottedLine) { $lineClassDict[$p] = 'Dotted' }
+
         if (-not $RowsOnly.IsPresent -and $inputObjectList.Count)
         {
-            $classList = @('HtmlReportingTable')
+            $classList = @(
+                if (!$Plain) { 'HtmlReportingTable' }
+            )
             if ($Narrow) { $classList += 'Narrow' }
             if ($Class) { foreach ($c in $Class) { $classList += $c } }
-            $resultList.Add("<table class='$($classList -join ' ')'>")
+            $idHtml = if ($Id) { " id='$Id'" }
+            $resultList.Add("<table class='$($classList -join ' ')'$idHtml>")
             $resultList.Add("<thead>")
-            $resultList.Add("<tr class='header'>")
+            $sb = [System.Text.StringBuilder]::new()
+            [void]$sb.Append("<tr class='header'>`r`n")
             foreach ($header in $headerList)
             {
+                [void]$sb.Append("<th")
+                if ($AddDataColumnName) { [void]$sb.AppendFormat(" data-column-name='{0}'", [System.Web.HttpUtility]::HtmlAttributeEncode($header)) }
+                if ($lineClassDict[$header]) { [void]$sb.Append(" class='Insert$($lineClassDict[$header])Line'") }
                 if ($RenameHeader[$header]) { $header = $RenameHeader[$header] }
-                $attrDcn = if ($AddDataColumnName) { " data-column-name='$([System.Web.HttpUtility]::HtmlAttributeEncode($header))'" }
-                $resultList.Add("<th$attrDcn>$header</th>")
+                [void]$sb.Append(">$header</th>`r`n")
             }
-            $resultList.Add("</tr>")
+            [void]$sb.Append("</tr>")
+            $resultList.Add($sb.ToString())
             $resultList.Add("</thead>")
             $resultList.Add("<tbody>")
         }
@@ -454,6 +480,8 @@ Function ConvertTo-HtmlTable
 
                 foreach ($value in $cellClassDict[$header]) { $cellClassList.Add($value) }
                 foreach ($value in $cellStyleDict[$header]) { $cellStyleList.Add($value) }
+
+                if ($lineClassDict[$header]) { $cellClassList.Add("Insert$($lineClassDict[$header])Line") }
 
                 $cellValue = "$($object.$header)"
 

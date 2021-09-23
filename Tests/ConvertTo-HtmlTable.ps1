@@ -192,5 +192,43 @@ foreach ($value in $true, $false)
                 $resultXml.SelectNodes('//tbody/tr[5]').InnerXml | Should Be '<td>13</td><td>14</td><td>-</td>'
             }
         }
+
+        Context "Class" {
+            It 'Plain' {
+                $result = [pscustomobject]@{A=1} | ConvertTo-HtmlTable -Plain
+                $resultXml = [xml]$result
+                $resultXml.table.Attributes['class'].'#text' | Should Be ''
+            }
+        }
+
+        Context "Id" {
+            It 'Sets' {
+                $result = [pscustomobject]@{A=1} | ConvertTo-HtmlTable -Id MyId
+                $resultXml = [xml]$result
+                $resultXml.table.Attributes['id'].'#text' | Should Be 'MyId'
+            }
+
+            It 'Stays off if unset' {
+                $result = [pscustomobject]@{A=1} | ConvertTo-HtmlTable
+                $resultXml = [xml]$result
+                $resultXml.table.Attributes['id'] | Should Be $null
+            }
+        }
+
+        Context "InsertLine" {
+            It 'All three' {
+                $result = [pscustomobject]@{A=1;B=2;C=3;D=4} |
+                    ConvertTo-HtmlTable -InsertSolidLine B -InsertDashedLine C -InsertDottedLine D
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//thead/tr[1]/th[1]').class | Should Be $null
+                $resultXml.SelectNodes('//thead/tr[1]/th[2]').class | Should Be InsertSolidLine
+                $resultXml.SelectNodes('//thead/tr[1]/th[3]').class | Should Be InsertDashedLine
+                $resultXml.SelectNodes('//thead/tr[1]/th[4]').class | Should Be InsertDottedLine
+                $resultXml.SelectNodes('//tbody/tr[1]/td[1]').class | Should Be $null
+                $resultXml.SelectNodes('//tbody/tr[1]/td[2]').class | Should Be InsertSolidLine
+                $resultXml.SelectNodes('//tbody/tr[1]/td[3]').class | Should Be InsertDashedLine
+                $resultXml.SelectNodes('//tbody/tr[1]/td[4]').class | Should Be InsertDottedLine
+            }
+        }
     }
 }

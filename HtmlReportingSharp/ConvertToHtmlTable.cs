@@ -25,7 +25,10 @@ namespace HtmlReportingSharp
 
         [Parameter()]
         public string[] Class { get; set; }
-        
+
+        [Parameter()]
+        public string Id { get; set; }
+
         [Parameter()]
         public SwitchParameter RowsOnly { get; set; }
 
@@ -60,6 +63,9 @@ namespace HtmlReportingSharp
         public SwitchParameter Narrow { get; set; }
 
         [Parameter()]
+        public SwitchParameter Plain { get; set; }
+
+        [Parameter()]
         public SwitchParameter AutoDetectHtml { get; set; }
 
         [Parameter()]
@@ -67,6 +73,15 @@ namespace HtmlReportingSharp
 
         [Parameter()]
         public string NoContentHtml { get; set; }
+
+        [Parameter()]
+        public string[] InsertSolidLine { get; set; }
+
+        [Parameter()]
+        public string[] InsertDashedLine { get; set; }
+
+        [Parameter()]
+        public string[] InsertDottedLine { get; set; }
         
         private List<PSObject> inputObjectList = new List<PSObject>();
 
@@ -160,23 +175,39 @@ namespace HtmlReportingSharp
                     if (RenameHeader[key] != null)
                         renameHeaderDict[key.ToString()] = RenameHeader[key].ToString();
 
+            var lineClassDict = new Dictionary<string,string>();
+            if (InsertSolidLine != null)
+                foreach (string p in InsertSolidLine)
+                    lineClassDict[p] = "Solid";
+            if (InsertDashedLine != null)
+                foreach (string p in InsertDashedLine)
+                    lineClassDict[p] = "Dashed";
+            if (InsertDottedLine != null)
+                foreach (string p in InsertDottedLine)
+                    lineClassDict[p] = "Dotted";
+
             if (!RowsOnly.IsPresent && inputObjectList.Count != 0)
             {
                 var classList = new List<string>();
-                classList.Add("HtmlReportingTable");
+                if (!Plain.IsPresent)
+                    classList.Add("HtmlReportingTable");
                 if (Narrow.IsPresent)
                     classList.Add("Narrow");
                 if (Class != null)
                     foreach (var c in Class)
-                        classList.Add(c);
-                resultBuilder.AppendFormat("<table class='{0}'>\r\n", String.Join(" ", classList));
-                resultBuilder.Append("<thead>\r\n");
+                        classList.Add(c);    
+                resultBuilder.AppendFormat("<table class='{0}'", String.Join(" ", classList));
+                if (Id != null)
+                    resultBuilder.AppendFormat(" id='{0}'", Id);
+                resultBuilder.Append(">\r\n<thead>\r\n");
                 resultBuilder.Append("<tr class='header'>\r\n");
                 foreach (string header in headerList)
                 {
                     resultBuilder.Append("<th");
                     if (AddDataColumnName.IsPresent)
                         resultBuilder.AppendFormat(" data-column-name='{0}'", System.Web.HttpUtility.HtmlAttributeEncode(header));
+                    if (lineClassDict.ContainsKey(header))
+                        resultBuilder.AppendFormat(" class='Insert{0}Line'", lineClassDict[header]);
                     if (renameHeaderDict.ContainsKey(header))
                         resultBuilder.Append(String.Format(">{0}</th>\r\n", renameHeaderDict[header]));
                     else
@@ -258,6 +289,9 @@ namespace HtmlReportingSharp
 
                     if (cellStyleDict.ContainsKey(header))
                         cellStyleList.AddRange(cellStyleDict[header]);
+
+                    if (lineClassDict.ContainsKey(header))
+                        cellClassList.Add(string.Format("Insert{0}Line", lineClassDict[header]));
 
                     string cellValue = "";
                     if (inputObject.Properties[header] != null && inputObject.Properties[header].Value != null)

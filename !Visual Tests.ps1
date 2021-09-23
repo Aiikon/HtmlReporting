@@ -138,6 +138,11 @@ Get-HtmlFragment {
             PSParentPath = { if ($_.Name -eq 'debug') { 3 } }
         }
 
+    h2 "HTML Table Insert Lines"
+
+    [pscustomobject]@{A=1;B=2;C=3;D=4} |
+        ConvertTo-HtmlTable -InsertSolidLine B -InsertDashedLine C -InsertDottedLine D
+
     h2 "Hourly Heatmap (One Set)"
 
     0..(14*24-1) |
