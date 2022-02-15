@@ -952,6 +952,160 @@ Function Define-HtmlHeatmapColor
     }
 }
 
+Function ConvertTo-HtmlMonthlySchedule
+{
+    [CmdletBinding(PositionalBinding=$false)]
+    Param
+    (
+        [Parameter(ValueFromPipeline=$true)] [object] $InputObject,
+        [Parameter()] [string] $DateProperty = 'Date',
+        [Parameter()] [string] $DaysProperty = 'Days',
+        [Parameter()] [string] $LabelProperty = 'Label',
+        [Parameter()] [string] $DateFormat = "ddd, MMMM d",
+        [Parameter()] [DateTime] $StartDate,
+        [Parameter()] [DateTime] $EndDate,
+        [Parameter()] [int] $CellWidth = 160,
+        [Parameter()] [int] $CellHeight = 120,
+        [Parameter()] [int] $Padding = 3,
+        [Parameter()] [double] $HeaderSize = 14,
+        [Parameter()] [double] $LabelHeight = 16
+    )
+    Begin
+    {
+        trap { $PSCmdlet.ThrowTerminatingError($_) }
+        $dateObjectDict = [ordered]@{}
+        $index = 0
+    }
+    Process
+    {
+        $date = $InputObject.$DateProperty.Date
+        $days = $InputObject.$DaysProperty
+
+        $continued = $false
+        do
+        {
+            $daysPastWeek = $date.DayOfWeek.value__ + $days - 1 - 6
+            $daysLeftInWeek = 7 - $date.DayOfWeek
+            $keyValue = $date.ToString('yyyy-MM-dd')
+
+            if (!$dateObjectDict.Contains($keyValue))
+            {
+                $dateObjectDict[$keyValue] = [System.Collections.Generic.List[object]]::new()
+            }
+            $dateObjectDict[$keyValue].Add([pscustomobject]@{
+                StartDate = $date
+                EndDate = $date.AddDays($days - 1)
+                Days = [Math]::Min($days, $daysLeftInWeek)
+                Label = $InputObject.$LabelProperty
+                Index = $index
+                Continues = $daysPastWeek -gt 0
+                Continued = $continued
+            })
+
+            if ($daysPastWeek -gt 0)
+            {
+                $days = $days - $daysLeftInWeek
+                $date = $date.AddDays(7-$date.DayOfWeek)
+                $continued = $true
+            }
+        } while ($daysPastWeek -gt 0)
+        $index += 1
+    }
+    End
+    {
+        Function Get-Weekday($Date, $Last)
+        {
+            $daysUntilPrevious = (([int]$Date.DayOfWeek) - ([int]([System.DayOfWeek]::$Last)) + 7) % 7
+            $Date.AddDays(-1 * $daysUntilPrevious - $weekDayCount)
+        }
+
+        if (!$StartDate)
+        {
+            $StartDate = $dateObjectDict.Values |
+                ForEach-Object { $_ } |
+                Measure-Object -Minimum StartDate |
+                ForEach-Object Minimum
+        }
+        if (!$EndDate)
+        {
+            $EndDate = $dateObjectDict.Values |
+                ForEach-Object { $_ } |
+                Measure-Object -Maximum StartDate |
+                ForEach-Object Maximum          
+        }
+
+        $headerBuffer = [Math]::Ceiling($HeaderSize * 1.3)
+        $headerDy = [Math]::Ceiling($HeaderSize * 1.05)
+
+        $StartDate = $StartDate.Date
+        $EndDate = $EndDate.Date
+
+        $trueStart = Get-Weekday -Date $StartDate -Last Monday
+        $trueEnd = Get-Weekday -Date $EndDate -Last Sunday
+
+        $weekCount = ($trueEnd.AddDays(1) - $trueStart).TotalDays / 7 + 1
+        $finalWidth = 7 * $CellWidth
+        $finalHeight = $weekCount * $CellHeight
+
+        $dayCount = ($EndDate - $StartDate).TotalDays
+
+        "<svg width='$finalWidth' height='$finalHeight'>"
+        $dateTakenRows = @{}
+        for ($i = 0; $i -le $dayCount; $i++)
+        {
+            $date = $StartDate.AddDays($i)
+            $dayOfWeek = [int]$date.DayOfWeek
+            $keyValue = $date.ToString('yyyy-MM-dd')
+            $dateTakenRows[$keyValue] = @{}
+            $x = $dayOfWeek * $CellWidth
+            $weekNumber = [Math]::Floor((($date - $trueStart).TotalDays + 1) / 7)
+            $y = $weekNumber * $CellHeight
+            "<rect x='$x' y='$y' width='${CellWidth}px' height='${CellHeight}px' style='stroke-width: 1px; stroke:rgb(0,0,0); fill-opacity: 0.0; pointer-events: none;' />"
+            "<text x='$x' y='$y' dy='$headerDy' dx='3' style='font-size:${HeaderSize}px;font-weight:bold;'>$([System.Web.HttpUtility]::HtmlEncode($date.ToString($DateFormat)))</text>"
+        }
+
+        for ($i = 0; $i -le $dayCount; $i++)
+        {
+            $date = $StartDate.AddDays($i)
+            $dayOfWeek = [int]$date.DayOfWeek
+            $keyValue = $date.ToString('yyyy-MM-dd')
+            $x = $dayOfWeek * $CellWidth
+            $weekNumber = [Math]::Floor((($date - $trueStart).TotalDays + 1) / 7)
+            $y = $weekNumber * $CellHeight
+            
+            foreach ($object in $dateObjectDict[$keyValue])
+            {
+                if (!$object) { continue }
+                $days = $object.Days
+                $row = 0
+                $myRow = $null
+                while ($myRow -eq $null)
+                {
+                    if ($dateTakenRows[$keyValue][$row])
+                    {
+                        $row += 1
+                        continue
+                    }
+                    $myRow = $row
+                }
+                for ($j = 0; $j -lt $days; $j++)
+                {
+                    $keyValue2 = $date.AddDays($j).ToString('yyyy-MM-dd')
+                    if (!$dateTakenRows[$keyValue2]) { continue }
+                    $dateTakenRows[$keyValue2][$myRow] = $true
+                }
+                $cx = $x + $Padding
+                $cy = $y + $Padding + $headerBuffer + 1 + $myRow * ($LabelHeight + 1) + 1
+                $width = $CellWidth*$days-2*$Padding
+                if ($cx + $width -gt $finalWidth) { $width = $finalWidth - $cx }
+                "<rect x='$cx' y='$cy' width='$width' height='$LabelHeight' rx='3' ry='3' style='fill:$(Get-HtmlReportColor -Index $object.Index -AsCssRgb); pointer-events: none;' />"
+                "<text x='$cx' y='$cy' alignment-baseline='hanging' dx='3' dy='1' style='font-size:$($LabelHeight*0.8)px;font-weight:bold;'>$([System.Web.HttpUtility]::HtmlEncode($object.Label))</text>"
+            }
+        }
+        "</svg>"
+    }
+}
+
 Function Expand-XmlText
 {
     Param

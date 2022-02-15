@@ -199,6 +199,17 @@ Get-HtmlFragment {
             Define-HtmlHeatmapColor -ColorName Red
         )
 
+    h2 "Monthly Schedule"
+
+    $i = 0
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ' -split '' |
+        ForEach-Object {
+            $days = Get-Random -Minimum 1 -Maximum 10
+            [pscustomobject]@{Label="Set $_ ($days Days)"; Date=[DateTime]::Today.AddDays($i); Days=$days}
+            $i += 2
+        } |
+        ConvertTo-HtmlMonthlySchedule
+
 } |
     Out-HtmlFile -AddTimestamp
 
