@@ -966,6 +966,8 @@ Function ConvertTo-HtmlMonthlySchedule
         [Parameter()] [DateTime] $EndDate,
         [Parameter()] [int] $CellWidth = 160,
         [Parameter()] [int] $CellHeight = 120,
+        [Parameter()] [string] $DefaultCellFill,
+        [Parameter()] [hashtable] $DayOfWeekCellFill,
         [Parameter()] [int] $Padding = 3,
         [Parameter()] [double] $HeaderSize = 14,
         [Parameter()] [double] $LabelHeight = 16
@@ -1060,7 +1062,16 @@ Function ConvertTo-HtmlMonthlySchedule
             $x = $dayOfWeek * $CellWidth
             $weekNumber = [Math]::Floor((($date - $trueStart).TotalDays + 1) / 7)
             $y = $weekNumber * $CellHeight
-            "<rect x='$x' y='$y' width='${CellWidth}px' height='${CellHeight}px' style='stroke-width: 1px; stroke:rgb(0,0,0); fill-opacity: 0.0; pointer-events: none;' />"
+            
+            $bgColor = $DefaultCellFill
+            if ($DayOfWeekCellFill -and $DayOfWeekCellFill[[string]$date.DayOfWeek])
+            {
+                $bgColor = $DayOfWeekCellFill[[string]$date.DayOfWeek]
+            }
+
+            $fillCss = if ($bgColor) { " fill:$bgColor;"} else { "fill-opacity: 0.0; " }
+
+            "<rect x='$x' y='$y' width='${CellWidth}px' height='${CellHeight}px' style='stroke-width: 1px; stroke:rgb(0,0,0); pointer-events: none;$fillCss' />"
             "<text x='$x' y='$y' dy='$headerDy' dx='3' style='font-size:${HeaderSize}px;font-weight:bold;'>$([System.Web.HttpUtility]::HtmlEncode($date.ToString($DateFormat)))</text>"
         }
 

@@ -208,7 +208,7 @@ Get-HtmlFragment {
             [pscustomobject]@{Label="Set $_ ($days Days)"; Date=[DateTime]::Today.AddDays($i); Days=$days}
             $i += 2
         } |
-        ConvertTo-HtmlMonthlySchedule
+        ConvertTo-HtmlMonthlySchedule -DefaultCellFill "rgb(200,200,200);" -DayOfWeekCellFill @{'Sunday'='rgb(150,150,150);'}
 
 } |
     Out-HtmlFile -AddTimestamp
