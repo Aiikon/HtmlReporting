@@ -1109,8 +1109,16 @@ Function ConvertTo-HtmlMonthlySchedule
                 $cy = $y + $Padding + $headerBuffer + 1 + $myRow * ($LabelHeight + 1) + 1
                 $width = $CellWidth*$days-2*$Padding
                 if ($cx + $width -gt $finalWidth) { $width = $finalWidth - $cx }
+                if ($object.Continued)
+                {
+                    "<rect x='$($cx-$Padding+1)' y='$cy' width='$(4+$Padding)' height='$LabelHeight' style='fill:$(Get-HtmlReportColor -Index $object.Index -AsCssRgb); pointer-events: none;' />"
+                }
+                if ($object.Continues)
+                {
+                    "<rect x='$($cx+$width-5)' y='$cy' width='$(4+$Padding)' height='$LabelHeight' style='fill:$(Get-HtmlReportColor -Index $object.Index -AsCssRgb); pointer-events: none;' />"
+                }
                 "<rect x='$cx' y='$cy' width='$width' height='$LabelHeight' rx='3' ry='3' style='fill:$(Get-HtmlReportColor -Index $object.Index -AsCssRgb); pointer-events: none;' />"
-                "<text x='$cx' y='$cy' alignment-baseline='hanging' dx='3' dy='1' style='font-size:$($LabelHeight*0.8)px;font-weight:bold;'>$([System.Web.HttpUtility]::HtmlEncode($object.Label))</text>"
+                "<text x='$cx' y='$cy' width='$width' alignment-baseline='hanging' dx='3' dy='1' style='font-size:$($LabelHeight*0.8)px;font-weight:bold;'>$([System.Web.HttpUtility]::HtmlEncode($object.Label))</text>"
             }
         }
         "</svg>"
