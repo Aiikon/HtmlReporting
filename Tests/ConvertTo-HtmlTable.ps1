@@ -72,6 +72,17 @@ foreach ($value in $true, $false)
                 $resultXml.SelectNodes('//tbody/tr[2]/td[3]/@style').'#text' | Should Be $null
             }
 
+            It "Works with cell style scripts referencing strings (properties)" {
+                $result = [pscustomobject]@{A=1; B=2; C=3; D=4; Y='font-weight:bold;'; Z='color:red;'} |
+                    ConvertTo-HtmlTable -Property A, B, C, D -CellStyleScripts @{A='Y'; B='Z'; C='Z'}
+
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr[1]/td[1]').OuterXml | Should Be '<td style="font-weight:bold;">1</td>'
+                $resultXml.SelectNodes('//tbody/tr[1]/td[2]').OuterXml | Should Be '<td style="color:red;">2</td>'
+                $resultXml.SelectNodes('//tbody/tr[1]/td[3]').OuterXml | Should Be '<td style="color:red;">3</td>'
+                $resultXml.SelectNodes('//tbody/tr[1]/td[4]').OuterXml | Should Be '<td>4</td>'
+            }
+
             It "Works with row style script" {
                 $result = $SampleData1 | ConvertTo-HtmlTable -RowStyleScript {if ($_.ClusterId -eq 2) { 'color:red;'; 'font-weight:bold;' }}
                 $resultXml = [xml]$result
@@ -99,6 +110,17 @@ foreach ($value in $true, $false)
                 $resultXml = [xml]$result
                 $resultXml.SelectNodes('//tbody/tr[2]/td[2]/@class').'#text' | Should Be "red bold"
                 $resultXml.SelectNodes('//tbody/tr[2]/td[3]/@class').'#text' | Should Be $null
+            }
+
+            It "Works with cell class scripts referencing strings (properties)" {
+                $result = [pscustomobject]@{A=1; B=2; C=3; D=4; Y='red'; Z='green'} |
+                    ConvertTo-HtmlTable -Property A, B, C, D -CellClassScripts @{A='Y'; C='Z'}
+
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr[1]/td[1]').OuterXml | Should Be '<td class="red">1</td>'
+                $resultXml.SelectNodes('//tbody/tr[1]/td[2]').OuterXml | Should Be '<td>2</td>'
+                $resultXml.SelectNodes('//tbody/tr[1]/td[3]').OuterXml | Should Be '<td class="green">3</td>'
+                $resultXml.SelectNodes('//tbody/tr[1]/td[4]').OuterXml | Should Be '<td>4</td>'
             }
 
             It "Works with row cell class script" {

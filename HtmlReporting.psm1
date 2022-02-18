@@ -1,7 +1,7 @@
 try
 {
     if ($Global:2e128b9186234521b3ab5ce70cc83360_ForceLoadPowerShellCmdlets -eq $true) { throw "Skipping HtmlReportingSharp Compilation" }
-    $date = [System.IO.File]::GetLastWriteTime("$PSScriptRoot\HtmlReportingSharp\Helpers.cs").ToString("yyyyMMdd_HHmmss")
+    $date = "20220217_v002"
     $Script:OutputPath = "$Env:LOCALAPPDATA\Rhodium\Module\HtmlReportingSharp_$date\HtmlReportingSharp.dll"
     if (![System.IO.File]::Exists($outputPath))
     {

@@ -18,6 +18,13 @@ namespace HtmlReportingSharp
         {
             if (ScriptBlock == null)
                 return new string[] { };
+            if (ScriptBlock is string)
+            {
+                string property = (string)ScriptBlock;
+                if (InputObject.Properties[property] == null)
+                    return new string[] { };
+                return ConvertObjectToStringArray(InputObject.Properties[property].Value);
+            }
             ScriptBlock scriptBlock = (ScriptBlock)ScriptBlock;
             string[] result = scriptBlock.InvokeWithContext(null, new List<PSVariable>() { new PSVariable("_", InputObject) }, null)
                 .Where(r => r != null)
