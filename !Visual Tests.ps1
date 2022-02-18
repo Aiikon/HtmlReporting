@@ -205,7 +205,11 @@ Get-HtmlFragment {
     'ABCDEFGHIJKLMNOPQRSTUVWXYZ' -split '' |
         ForEach-Object {
             $days = Get-Random -Minimum 1 -Maximum 10
-            [pscustomobject]@{Label="Set $_ ($days Days)"; Date=[DateTime]::Today.AddDays($i); Days=$days}
+            if ($i -eq 0)
+            {
+                [pscustomobject]@{Label="Gray Fill No Link"; Date=[DateTime]::Today; Days=2; LabelFill="rgb(100,100,100)"}
+            }
+            [pscustomobject]@{Label="Set $_ ($days Days)"; Date=[DateTime]::Today.AddDays($i); Days=$days; Href="/$_/"}
             $i += 2
         } |
         ConvertTo-HtmlMonthlySchedule -DefaultCellFill "rgb(200,200,200);" -DayOfWeekCellFill @{'Sunday'='rgb(150,150,150);'}

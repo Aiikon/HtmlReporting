@@ -961,6 +961,8 @@ Function ConvertTo-HtmlMonthlySchedule
         [Parameter()] [string] $DateProperty = 'Date',
         [Parameter()] [string] $DaysProperty = 'Days',
         [Parameter()] [string] $LabelProperty = 'Label',
+        [Parameter()] [string] $HrefProperty = 'Href',
+        [Parameter()] [string] $LabelFillProperty = 'LabelFill',
         [Parameter()] [string] $DateFormat = "ddd, MMMM d",
         [Parameter()] [DateTime] $StartDate,
         [Parameter()] [DateTime] $EndDate,
@@ -999,6 +1001,8 @@ Function ConvertTo-HtmlMonthlySchedule
                 EndDate = $date.AddDays($days - 1)
                 Days = [Math]::Min($days, $daysLeftInWeek)
                 Label = $InputObject.$LabelProperty
+                Href = $InputObject.$HrefProperty
+                LabelFill = $InputObject.$LabelFillProperty
                 Index = $index
                 Continues = $daysPastWeek -gt 0
                 Continued = $continued
@@ -1105,20 +1109,26 @@ Function ConvertTo-HtmlMonthlySchedule
                     if (!$dateTakenRows[$keyValue2]) { continue }
                     $dateTakenRows[$keyValue2][$myRow] = $true
                 }
+
+                $labelFill = if ($object.LabelFill) { $object.LabelFill } else { Get-HtmlReportColor -Index $object.Index -AsCssRgb }
+
                 $cx = $x + $Padding
                 $cy = $y + $Padding + $headerBuffer + 1 + $myRow * ($LabelHeight + 1) + 1
                 $width = $CellWidth*$days-2*$Padding
                 if ($cx + $width -gt $finalWidth) { $width = $finalWidth - $cx }
+                $pointerEvents = ' pointer-events: none;'
+                if ($object.Href) { "<a href='$($object.Href)'>"; $pointerEvents='' }
                 if ($object.Continued)
                 {
-                    "<rect x='$($cx-$Padding+1)' y='$cy' width='$(4+$Padding)' height='$LabelHeight' style='fill:$(Get-HtmlReportColor -Index $object.Index -AsCssRgb); pointer-events: none;' />"
+                    "<rect x='$($cx-$Padding+1)' y='$cy' width='$(4+$Padding)' height='$LabelHeight' style='fill:$labelFill;$pointerEvents' />"
                 }
                 if ($object.Continues)
                 {
-                    "<rect x='$($cx+$width-5)' y='$cy' width='$(4+$Padding)' height='$LabelHeight' style='fill:$(Get-HtmlReportColor -Index $object.Index -AsCssRgb); pointer-events: none;' />"
+                    "<rect x='$($cx+$width-5)' y='$cy' width='$(4+$Padding)' height='$LabelHeight' style='fill:$labelFill;$pointerEvents' />"
                 }
-                "<rect x='$cx' y='$cy' width='$width' height='$LabelHeight' rx='3' ry='3' style='fill:$(Get-HtmlReportColor -Index $object.Index -AsCssRgb); pointer-events: none;' />"
+                "<rect x='$cx' y='$cy' width='$width' height='$LabelHeight' rx='3' ry='3' style='fill:$labelFill;$pointerEvents' />"
                 "<text x='$cx' y='$cy' width='$width' alignment-baseline='hanging' dx='3' dy='1' style='font-size:$($LabelHeight*0.8)px;font-weight:bold;'>$([System.Web.HttpUtility]::HtmlEncode($object.Label))</text>"
+                if ($object.Href) { "</a>" }
             }
         }
         "</svg>"
