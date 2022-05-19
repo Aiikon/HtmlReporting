@@ -1306,7 +1306,7 @@ Function Get-HtmlImgTag
             $Bytes = [System.IO.File]::ReadAllBytes($FilePath)
         }
         $base64 = [Convert]::ToBase64String($Bytes)
-        "<img srv='data:image/$extension;base64,$base64' />"
+        "<img src='data:image/$extension;base64,$base64' />"
     }
 }
 
