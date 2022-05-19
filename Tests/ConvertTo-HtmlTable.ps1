@@ -143,6 +143,11 @@ foreach ($value in $true, $false)
                 $resultXml.SelectNodes('//thead/tr[1]/th[1]').'#text' | Should Be "Good"
             }
 
+            It "Works with ExcludeProperty (No Input)" {
+                $result = @() | ConvertTo-HtmlTable -ExcludeProperty B*
+                1 | Should Be 1
+            }
+
             It "Works with AutoDetectHtml" {
                 $result = [pscustomobject]@{Col1="<strong>Text</strong>"; Col2="Basic < text"; Col3="Line`r`nBreak"} |
                     ConvertTo-HtmlTable -AutoDetectHtml
