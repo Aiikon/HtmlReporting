@@ -195,7 +195,7 @@ namespace HtmlReportingSharp
                     classList.Add("Narrow");
                 if (Class != null)
                     foreach (var c in Class)
-                        classList.Add(c);    
+                        classList.Add(c);
                 resultBuilder.AppendFormat("<table class='{0}'", String.Join(" ", classList));
                 if (Id != null)
                     resultBuilder.AppendFormat(" id='{0}'", Id);
