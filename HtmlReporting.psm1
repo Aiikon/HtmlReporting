@@ -246,6 +246,10 @@ table.HtmlReportingTable td.InsertDottedLine, table.HtmlReportingTable th.Insert
     margin: 1px 1px 1px 1px;
 }
 
+summary {
+    cursor:pointer;
+}
+
 .red {
     color: red;
 }
@@ -1556,7 +1560,7 @@ Function GenerateHtmlTagFunctions
 
     foreach ($private:t in 'html', 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a',
         'form', 'input', 'button', 'option', 'textarea', 'button', 'label', 'small',
-        'table', 'thead', 'tbody', 'tr', 'th', 'td')
+        'table', 'thead', 'tbody', 'tr', 'th', 'td', 'details', 'summary')
     {
         $functionHash[$t] = [ScriptBlock]::Create("
         [CmdletBinding(PositionalBinding=`$false)]

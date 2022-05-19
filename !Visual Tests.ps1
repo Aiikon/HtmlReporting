@@ -46,6 +46,14 @@ Get-HtmlFragment {
 
     hr
 
+    h2 "Summary and Details"
+    details @(
+        summary (strong "Summary")
+        p "Details"
+    )
+
+    hr
+
     h2 Indicators
     ul {
         li (Get-HtmlIndicatorText "Sample 1" -ColorName Green)
