@@ -222,6 +222,18 @@ Get-HtmlFragment {
         } |
         ConvertTo-HtmlMonthlySchedule -DefaultCellFill "rgb(200,200,200);" -DayOfWeekCellFill @{'Sunday'='rgb(150,150,150);'}
 
+    h3 "Overflow tests"
+
+    @(
+        [pscustomobject]@{Date=[DateTime]"2022-06-26"; Days=2; Label="Entirely Before"}
+        [pscustomobject]@{Date=[DateTime]"2022-06-26"; Days=14; Label="Continuing Before"}
+        [pscustomobject]@{Date=[DateTime]"2022-07-28"; Days=14; Label="Continuing After"}
+        [pscustomobject]@{Date=[DateTime]"2022-08-01"; Days=13; Label="Entirely After"}
+        [pscustomobject]@{Date=[DateTime]"2022-07-14"; Days=5; Label="Entirely Within"}
+        [pscustomobject]@{Date=[DateTime]"2022-06-27"; Days=45; Label="Before and After"}
+    ) |
+        ConvertTo-HtmlMonthlySchedule -StartDate "2022-07-01" -EndDate "2022-07-31"
+
 } |
     Out-HtmlFile -AddTimestamp
 

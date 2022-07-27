@@ -1002,7 +1002,7 @@ Function ConvertTo-HtmlMonthlySchedule
             }
             $dateObjectDict[$keyValue].Add([pscustomobject]@{
                 StartDate = $date
-                EndDate = $date.AddDays($days - 1)
+                EndDate = $date.AddDays([Math]::Min($days, $daysLeftInWeek) - 1)
                 Days = [Math]::Min($days, $daysLeftInWeek)
                 Label = $InputObject.$LabelProperty
                 Href = $InputObject.$HrefProperty
@@ -1049,6 +1049,7 @@ Function ConvertTo-HtmlMonthlySchedule
 
         $StartDate = $StartDate.Date
         $EndDate = $EndDate.Date
+        $startDateKeyValue = $StartDate.ToString('yyyy-MM-dd')
 
         $trueStart = Get-Weekday -Date $StartDate -Last Monday
         $trueEnd = Get-Weekday -Date $EndDate -Last Sunday
@@ -1058,6 +1059,30 @@ Function ConvertTo-HtmlMonthlySchedule
         $finalHeight = $weekCount * $CellHeight
 
         $dayCount = ($EndDate - $StartDate).TotalDays
+
+        # Edit objects outside the calendar bounds that could appear on it
+        foreach ($dateKey in @($dateObjectDict.Keys))
+        {
+            foreach ($object in $dateObjectDict[$dateKey])
+            {
+                if ($object.StartDate -lt $StartDate -and $object.EndDate -ge $StartDate)
+                {
+                    $object.Days = ($object.EndDate - $StartDate).TotalDays + 1
+                    $object.StartDate = $StartDate
+                    $object.Continued = $true
+                    if (!$dateObjectDict.Contains($startDateKeyValue))
+                    {
+                        $dateObjectDict[$startDateKeyValue] = [System.Collections.Generic.List[object]]::new()
+                    }
+                    $dateObjectDict[$startDateKeyValue].Add($object)
+                }
+                elseif ($object.StartDate -le $EndDate -and $object.EndDate -gt $EndDate)
+                {
+                    $object.Days = ($EndDate - $object.StartDate).TotalDays + 1
+                    $object.Continues = $true
+                }
+            }
+        }
 
         "<svg width='$finalWidth' height='$finalHeight'>"
         $dateTakenRows = @{}
