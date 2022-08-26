@@ -1,7 +1,7 @@
 try
 {
     if ($Global:2e128b9186234521b3ab5ce70cc83360_ForceLoadPowerShellCmdlets -eq $true) { throw "Skipping HtmlReportingSharp Compilation" }
-    $date = "20220217_v002"
+    $date = "20220825_v001"
     $Script:OutputPath = "$Env:LOCALAPPDATA\Rhodium\Module\HtmlReportingSharp_$date\HtmlReportingSharp.dll"
     if (![System.IO.File]::Exists($outputPath))
     {
@@ -377,7 +377,7 @@ Function ConvertTo-HtmlTable
             $Property = $inputObjectList[0].PSObject.Properties.Name
         }
 
-        if ($ExcludeProperty)
+        if ($ExcludeProperty -and $Property)
         {
             $Property = [Rhodium.HtmlReporting.HtmlReportingHelpers]::ExcludeLikeAny($Property, $ExcludeProperty)
         }

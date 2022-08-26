@@ -162,7 +162,7 @@ namespace HtmlReportingSharp
             if (Property == null && inputObjectList.Count != 0)
                 Property = inputObjectList[0].Properties.Select(p => p.Name).ToArray();
 
-            if (ExcludeProperty != null)
+            if (ExcludeProperty != null && Property != null)
                 Property = Helpers.ExcludeLikeAny(Property, ExcludeProperty).ToArray();
             
             if (inputObjectList.Count != 0)
