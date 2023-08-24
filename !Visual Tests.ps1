@@ -27,6 +27,8 @@ Get-HtmlFragment {
     p "And making use of `$someVariable: $someVariable"
     p "Making use of some $(span -style 'color:red;' "red") text"
 
+    pre -HtmlEncode "Pre-formatted text<>`r`nLine2`r`nLine3"
+
     p {
         "A sample link:"
         a -href 'test.html' 'Test'

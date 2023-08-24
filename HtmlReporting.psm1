@@ -1583,39 +1583,48 @@ Function GenerateHtmlTagFunctions
     $other['label'] = 'for'
     $other['span'] = 'title'
 
+    $private:booleans = @{}
+    $booleans['input'] = 'checked', 'disabled', 'required', 'readonly'
+    $booleans['textarea'] = 'disabled', 'required', 'readonly'
+    $booleans['select'] = 'disabled', 'required', 'multiple'
+    $booleans['option'] = 'selected'
+
     foreach ($private:t in 'html', 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a',
-        'form', 'input', 'button', 'option', 'textarea', 'button', 'label', 'small',
+        'form', 'input', 'button', 'option', 'textarea', 'button', 'label', 'pre', 'small',
         'table', 'thead', 'tbody', 'tr', 'th', 'td', 'details', 'summary')
     {
-        $functionHash[$t] = [ScriptBlock]::Create("
-        [CmdletBinding(PositionalBinding=`$false)]
-        Param
-        (
-            $(if ($t -eq 'html') {'[Parameter(Position=0,Mandatory=$true)] [string] $tag,'})
-            [Parameter(ValueFromRemainingArguments=`$true)] [object[]] `$Definition,
-            [Parameter()] [string[]] `$HtmlEncode,
-            [Parameter()] [string[]] `$class,
-            [Parameter()] [string] `$id,
-            [Parameter()] [string[]] `$style,
-            [Parameter()] [hashtable] `$Attributes$(foreach ($p in $other[$t]) { ",`r`n[Parameter()] [string] `$$p" } )
-        )
-        $(if ($t -ne 'html') { "`$private:tag = '$t'" })
-        `$otherList = @()
-        if (`$class) { `$otherList += ""class='`$(`$class -join ' ')'"" }
-        if (`$style) { `$otherList += ""style='`$(`$style -join ' ')'"" }
-        if (`$id) { `$otherList += ""id='`$id'"" }
-        if (`$Attributes) { foreach (`$key in `$Attributes.Keys) { `$otherList += `"`$key='`$(`$Attributes[`$key])'`" } }
-        $(foreach ($p in $other[$t]) { "if (`$$p) { `$otherList += """"$($p.ToLower())='`$$p'"""" }`r`n" } )
-        `$otherCode = ''
-        if (`$otherList) { `$otherCode = "" `$(`$otherList -join ' ')"" }
-        `$text = @(
-            foreach (`$item in `$Definition)
-            {
-                if (`$item -is [scriptblock]) { & `$item } else { `$item }
-            }
-            foreach (`$item in `$HtmlEncode) { [System.Web.HttpUtility]::HtmlEncode(`$item) }
-        )
-        ""<`$tag`$otherCode>"", (`$text -join ' '), ""</`$tag>"" -join ''")
+        $private:sb = [System.Text.StringBuilder]::new()
+        [void]$sb.Append("[CmdletBinding(PositionalBinding=`$false)]`r`nParam`r`n(")
+        if ($t -eq 'html') { [void]$sb.Append("`r`n    [Parameter(Position=0,Mandatory=`$true)] [string] `$tag,") }
+        [void]$sb.Append("`r`n    [Parameter(ValueFromRemainingArguments=`$true)] [object[]] `$Definition")
+        [void]$sb.Append(",`r`n    [Parameter()] [string[]] `$HtmlEncode")
+        [void]$sb.Append(",`r`n    [Parameter()] [string[]] `$class")
+        [void]$sb.Append(",`r`n    [Parameter()] [string] `$id")
+        [void]$sb.Append(",`r`n    [Parameter()] [string[]] `$style")
+        [void]$sb.Append(",`r`n    [Parameter()] [hashtable] `$Attributes")
+        foreach ($p in $other[$t]) { [void]$sb.Append(",`r`n    [Parameter()] [string] `$$p") }
+        foreach ($p in $booleans[$t]) { [void]$sb.Append(",`r`n    [Parameter()] [bool] `$$p") }
+        [void]$sb.Append("`r`n)")
+        if ($t -ne 'html') { [void]$sb.Append("`r`n`$private:tag = '$t'") }
+        [void]$sb.Append("`r`n`$otherList = @()")
+        [void]$sb.Append("`r`nif (`$class) { `$otherList += ""class='`$(`$class -join ' ')'"" }")
+        [void]$sb.Append("`r`nif (`$style) { `$otherList += ""style='`$(`$style -join ' ')'"" }")
+        [void]$sb.Append("`r`nif (`$id) { `$otherList += ""id='`$id'"" }")
+        [void]$sb.Append("`r`nif (`$Attributes) { foreach (`$key in `$Attributes.Keys) { `$otherList += `"`$key='`$(`$Attributes[`$key])'`" } }")
+        foreach ($p in $other[$t]) { [void]$sb.Append("`r`nif (`$$p) { `$otherList += `"$($p.ToLower())='`$$p'`" }") }
+        foreach ($p in $booleans[$t]) { [void]$sb.Append("`r`nif (`$$p) { `$otherList += `"$($p.ToLower())='$($p.ToLower())'`" }") }
+        [void]$sb.Append("`r`n`$otherCode = ''")
+        [void]$sb.Append("`r`nif (`$otherList) { `$otherCode = "" `$(`$otherList -join ' ')"" }")
+        [void]$sb.Append("`r`n`$text = @(")
+        [void]$sb.Append("`r`n    foreach (`$item in `$Definition)")
+        [void]$sb.Append("`r`n    {")
+        [void]$sb.Append("`r`n        if (`$item -is [scriptblock]) { & `$item } else { `$item }")
+        [void]$sb.Append("`r`n    }")
+        [void]$sb.Append("`r`n    foreach (`$item in `$HtmlEncode) { [System.Web.HttpUtility]::HtmlEncode(`$item) }")
+        [void]$sb.Append("`r`n)")
+        [void]$sb.Append("`r`n`"<`$tag`$otherCode>`", (`$text -join ' '), `"</`$tag>`" -join ''")
+
+        $functionHash[$t] = [ScriptBlock]::Create($sb.ToString())
     }
     $functionHash['br'] = { param($clear) "<br$(if ($clear) { " clear='$clear'" }) />" }
     $functionHash['hr'] = { "<hr />" }

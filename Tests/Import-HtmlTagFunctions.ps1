@@ -49,6 +49,15 @@ Describe "Import-HtmlTagFunctions" {
             br -clear all | Should Be "<br clear='all' />"
         }
 
+        It "input supports checked" {
+            input -type checkbox -checked $true | Should Be "<input type='checkbox' checked='checked'></input>"
+            input -type checkbox -checked $false | Should Be "<input type='checkbox'></input>"
+        }
+
+        It "Generates a pre function" {
+            pre -htmlencode "Test<>" | Should Be "<pre>Test&lt;&gt;</pre>"
+        }
+
         It "Generates a small function" {
             small "text" | Should Be "<small>text</small>"
         }
