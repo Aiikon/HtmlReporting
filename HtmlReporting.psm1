@@ -1264,8 +1264,84 @@ Function Get-HtmlEncodedText
     }
 }
 
+Function Get-HtmlReportColorSet
+{
+    [CmdletBinding(PositionalBinding=$false)]
+    Param
+    (
+        [Parameter()] [System.Collections.IDictionary] $ColorSet,
+        [Parameter()] [string[]] $StartingColorNames,
+        [Parameter()] [string[]] $ExcludeColorNames
+    )
+    End
+    {
+        if (!$ColorSet)
+        {
+            if (!$Script:DefaultReportColors)
+            {
+                $colors = [ordered]@{}
+                $colors['Blue'] = 67, 134, 216
+                $colors['Orange'] = 255, 154, 46
+                $colors['Red'] = 219, 68, 63
+                $colors['Green'] = 168, 212, 79
+                $colors['Purple'] = 133, 96, 179
+                $colors['SeaBlue'] = 60, 191, 227
+                $colors['SkyBlue'] = 175, 216, 248
+                $colors['Teal'] = 0, 142, 142
+                $colors['DarkGreen'] = 139, 186, 0
+                $colors['LightOrange'] = 250, 189, 15
+                $colors['Salmon'] = 250, 110, 70
+                $colors['DarkRed'] = 157, 8, 13
+                $colors['LightPurple'] = 161, 134, 190
+                $colors['Brown'] = 204, 102, 0
+                $colors['Tan'] = 253, 198, 137
+
+                $Script:DefaultReportColors = $colors
+            }
+            $ColorSet = $Script:DefaultReportColors
+        }
+
+        $newColorSet = $null
+        if ($StartingColorNames -or $ExcludeColorNames)
+        {
+            $newColorSet = [ordered]@{}
+
+            if ($StartingColorNames)
+            {
+                foreach ($name in $StartingColorNames)
+                {
+                    $rgb = $ColorSet[$name]
+                    if (!$rgb) { throw "No color named '$name' found." }
+                    if ($newColorSet[$name]) { throw "Color name '$name' is already used." }
+                    $newColorSet[$name] = $rgb
+                }
+            }
+
+            foreach ($oldPair in $ColorSet.GetEnumerator())
+            {
+                if ($newColorSet[$oldPair.Key]) { continue }
+                $newColorSet[$oldPair.Key] = $oldPair.Value
+            }
+
+            if ($ExcludeColorNames)
+            {
+                foreach ($name in $ExcludeColorNames)
+                {
+                    $rgb = $newColorSet[$name]
+                    if (!$rgb) { throw "No color named '$name' found." }
+                    $newColorSet.Remove($name)
+                }
+            }
+
+            $ColorSet = $newColorSet
+        }
+        $ColorSet
+    }
+}
+
 Function Get-HtmlReportColor
 {
+    [CmdletBinding(PositionalBinding=$false)]
     Param
     (
         [Parameter(Mandatory=$true, Position=0, ParameterSetName='ByIndex')] [int] $Index,
@@ -1275,41 +1351,18 @@ Function Get-HtmlReportColor
                 'Brown', 'Tan')]
             [string] $Name,
         [Parameter()] [switch] $AsCssRgb,
-        [Parameter()] [double] $AsCssRgba
+        [Parameter()] [double] $AsCssRgba,
+        [Parameter()] [System.Collections.IDictionary] $ColorSet,
+        [Parameter()] [string[]] $StartingColorNames,
+        [Parameter()] [string[]] $ExcludeColorNames
     )
     End
     {
-        if ($Index -gt 14) { $Index = $Index % 15 }
-        if (!$Script:ReportColorIndices)
-        {
-            $Script:ReportColorIndices = [Array]::CreateInstance([int[]], 15)
-            $Script:ReportColorIndices[0] = 67, 134, 216
-            $Script:ReportColorIndices[1] = 255, 154, 46
-            $Script:ReportColorIndices[2] = 219, 68, 63
-            $Script:ReportColorIndices[3] = 168, 212, 79
-            $Script:ReportColorIndices[4] = 133, 96, 179
-            $Script:ReportColorIndices[5] = 60, 191, 227
-            $Script:ReportColorIndices[6] = 175, 216, 248
-            $Script:ReportColorIndices[7] = 0, 142, 142
-            $Script:ReportColorIndices[8] = 139, 186, 0
-            $Script:ReportColorIndices[9] = 250, 189, 15
-            $Script:ReportColorIndices[10] = 250, 110, 70
-            $Script:ReportColorIndices[11] = 157, 8, 13
-            $Script:ReportColorIndices[12] = 161, 134, 190
-            $Script:ReportColorIndices[13] = 204, 102, 0
-            $Script:ReportColorIndices[14] = 253, 198, 137
-
-            $Script:ReportColorNameToIndex = @{}
-            $i = 0
-            foreach ($color in 'Blue', 'Orange', 'Red', 'Green', 'Purple', 'SeaBlue', 'SkyBlue',
-                'Teal', 'DarkGreen', 'LightOrange', 'Salmon', 'DarkRed', 'LightPurple',
-                'Brown', 'Tan')
-            {
-                $Script:ReportColorNameToIndex[$color] = $i++
-            }
-        }
-        if ($Name) { $Index = $Script:ReportColorNameToIndex[$Name] }
-        $rgb = $Script:ReportColorIndices[$Index]
+        $colorSet = Get-HtmlReportColorSet -ColorSet $ColorSet -StartingColorNames $StartingColorNames -ExcludeColorNames $ExcludeColorNames
+        $count = $colorSet.Count
+        if ($Index -ge $count) { $Index = $Index % $count }
+        if ($Name) { $rgb = $colorSet[$Name] }
+        else { $rgb = $colorSet[$Index] }
         if ($AsCssRgb) { "rgb($($rgb -join ','))" }
         elseif ($AsCssRgba) { "rgba($($rgb -join ','),$AsCssRgba)" }
         else { $rgb }

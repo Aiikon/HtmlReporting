@@ -97,6 +97,7 @@ FunctionsToExport = @(
     'ConvertFrom-HtmlTable'
     'Get-HtmlEncodedText'
     'Get-HtmlReportColor'
+    'Get-HtmlReportColorSet'
     'Get-HtmlImgTag'
     'Get-HtmlIndicatorText'
     'Get-HtmlSelect'
