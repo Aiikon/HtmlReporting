@@ -236,6 +236,43 @@ Get-HtmlFragment {
     ) |
         ConvertTo-HtmlMonthlySchedule -StartDate "2022-07-01" -EndDate "2022-07-31"
 
+    h2 "Form Test"
+    form @(
+        div @(
+            label -for check1 "Unchecked Checkbox"
+            input -type checkbox -id check1
+        )
+        div @(
+            label -for check2 "Checked Checkbox"
+            input -type checkbox -id check2 -checked $true
+        )
+        div @(
+            label -for select1 "Single Select"
+            Get-HtmlSelect -Id select1 -Values A, B, C -SelectedValues B
+        )
+        div @(
+            label -for select2 "Multi Select"
+            Get-HtmlSelect -Id select2 -Values Option1, Option2, Option3 -SelectedValues Option1, Option3 -Multiple -Size 0
+        )
+        div @(
+            label -for text1 "Basic Text"
+            input -type text -id text1
+        )
+        div @(
+            label -for text2 "Preset Text"
+            input -type text -id text2 -value "Preset Value"
+        )
+        div @(
+            Get-HtmlDataList -Id list1 -Values Value1, Value2, Value3, Option4, Option5
+            label -for text3 "Datalist Text"
+            input -type text -id text3 -list list1
+        )
+        div @(
+            label -for textarea1 "Text Area"
+            textarea "Preset Text" -id textarea1 -rows 5
+        )
+    )
+
 } |
     Out-HtmlFile -AddTimestamp
 

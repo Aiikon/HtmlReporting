@@ -1247,6 +1247,42 @@ Function ConvertFrom-HtmlTable
     }
 }
 
+
+Function Get-HtmlDataList
+{
+    [CmdletBinding(PositionalBinding=$false,DefaultParameterSetName='Values')]
+    Param
+    (
+        [Parameter(ParameterSetName='Pipeline',ValueFromPipeline=$true)] [object] $InputObject,
+        [Parameter(ParameterSetName='Pipeline',Mandatory=$true)] [string] $ValueProperty,
+        [Parameter(ParameterSetName='Values',Mandatory=$true)] [string[]] $Values,
+        [Parameter(Mandatory=$true)] [string] $Id
+    )
+    Begin
+    {
+        $valueList = [System.Collections.Generic.List[string]]::new()
+        if ($Values) { foreach ($value in $Values) { $valueList.Add($value) } }
+    }
+    Process
+    {
+        if (!$InputObject) { return }
+        $valueList.Add([string]$InputObject.$ValueProperty)
+    }
+    End
+    {
+        $result = [System.Text.StringBuilder]::new()
+        [void]$result.Append("<datalist")
+        [void]$result.AppendFormat(" id='{0}'", [System.Web.HttpUtility]::HtmlAttributeEncode($Id))
+        [void]$result.Append(">")
+        foreach ($value in $valueList)
+        {
+            [void]$result.Append("<option value='$([System.Web.HttpUtility]::HtmlAttributeEncode($value))' />")
+        }
+        [void]$result.Append("</datalist>")
+        $result.ToString()
+    }
+}
+
 Function Get-HtmlEncodedText
 {
     Param
@@ -1629,7 +1665,7 @@ Function GenerateHtmlTagFunctions
     $private:other = @{}
     $other['a'] = 'name', 'href', 'target', 'onclick'
     $other['form'] = 'action', 'method'
-    $other['input'] = 'type', 'name', 'value'
+    $other['input'] = 'type', 'name', 'value', 'list'
     $other['option'] = 'value'
     $other['textarea'] = 'name', 'rows', 'cols'
     $other['button'] = 'type', 'onclick', 'name', 'value'

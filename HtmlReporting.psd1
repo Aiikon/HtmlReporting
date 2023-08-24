@@ -95,6 +95,7 @@ FunctionsToExport = @(
     'Define-HtmlHeatmapColor'
     'ConvertTo-HtmlMonthlySchedule'
     'ConvertFrom-HtmlTable'
+    'Get-HtmlDataList'
     'Get-HtmlEncodedText'
     'Get-HtmlReportColor'
     'Get-HtmlReportColorSet'
