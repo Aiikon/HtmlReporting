@@ -1664,19 +1664,20 @@ Function GenerateHtmlTagFunctions
         
     $private:other = @{}
     $other['a'] = 'name', 'href', 'target', 'onclick'
+    $other['button'] = 'type', 'onclick', 'name', 'value'
     $other['form'] = 'action', 'method'
     $other['input'] = 'type', 'name', 'value', 'list'
-    $other['option'] = 'value'
-    $other['textarea'] = 'name', 'rows', 'cols'
-    $other['button'] = 'type', 'onclick', 'name', 'value'
     $other['label'] = 'for'
+    $other['option'] = 'value'
     $other['span'] = 'title'
+    $other['textarea'] = 'name', 'rows', 'cols'
 
     $private:booleans = @{}
+    $booleans['details'] = 'open'
     $booleans['input'] = 'checked', 'disabled', 'required', 'readonly'
-    $booleans['textarea'] = 'disabled', 'required', 'readonly'
-    $booleans['select'] = 'disabled', 'required', 'multiple'
     $booleans['option'] = 'selected'
+    $booleans['select'] = 'disabled', 'required', 'multiple'
+    $booleans['textarea'] = 'disabled', 'required', 'readonly'
 
     foreach ($private:t in 'html', 'h1', 'h2', 'h3', 'h4', 'ol', 'ul', 'li', 'p', 'span', 'div', 'strong', 'em', 'a',
         'form', 'input', 'button', 'option', 'textarea', 'button', 'label', 'pre', 'small',
