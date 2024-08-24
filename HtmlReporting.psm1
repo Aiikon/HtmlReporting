@@ -1673,6 +1673,7 @@ Function GenerateHtmlTagFunctions
     $other['textarea'] = 'name', 'rows', 'cols'
 
     $private:booleans = @{}
+    $booleans['button'] = 'disabled'
     $booleans['details'] = 'open'
     $booleans['input'] = 'checked', 'disabled', 'required', 'readonly'
     $booleans['option'] = 'selected'
