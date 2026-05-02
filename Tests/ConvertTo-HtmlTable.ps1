@@ -131,6 +131,33 @@ foreach ($value in $true, $false)
                 $resultXml.SelectNodes('//tbody/tr[2]/td[3]/@class').'#text' | Should Be "red bold"
             }
 
+            It "Works with -NoWrapProperty 'NamedCell'" {
+                $result = $SampleData1 | ConvertTo-HtmlTable -NoWrapProperty ClusterName
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr[1]/td[1]/@class').'#text' | Should Be $null
+                $resultXml.SelectNodes('//tbody/tr[1]/td[2]/@class').'#text' | Should Be "nowrap"
+                $resultXml.SelectNodes('//tbody/tr[1]/td[3]/@class').'#text' | Should Be $null
+            }
+
+            It "Works with -NoWrapProperty *" {
+                $result = $SampleData1 | ConvertTo-HtmlTable -NoWrapProperty *
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//tbody/tr[1]/td[1]/@class').'#text' | Should Be "nowrap"
+                $resultXml.SelectNodes('//tbody/tr[1]/td[2]/@class').'#text' | Should Be "nowrap"
+                $resultXml.SelectNodes('//tbody/tr[1]/td[3]/@class').'#text' | Should Be "nowrap"
+            }
+
+            It "Works with -ColumnClass" {
+                $result = $SampleData1 | ConvertTo-HtmlTable -ColumnClass @{ClusterId='red'; ClusterName='bold'}
+                $resultXml = [xml]$result
+                $resultXml.SelectNodes('//thead/tr[1]/th[1]/@class').'#text' | Should Be "red"
+                $resultXml.SelectNodes('//thead/tr[1]/th[2]/@class').'#text' | Should Be "bold"
+                $resultXml.SelectNodes('//thead/tr[1]/th[3]/@class').'#text' | Should Be $null
+                $resultXml.SelectNodes('//tbody/tr[1]/td[1]/@class').'#text' | Should Be "red"
+                $resultXml.SelectNodes('//tbody/tr[1]/td[2]/@class').'#text' | Should Be "bold"
+                $resultXml.SelectNodes('//tbody/tr[1]/td[3]/@class').'#text' | Should Be $null
+            }
+
             It "Joins array values with spaces (OFS)" {
                 $result = [pscustomobject]@{A=1,'Two'} | ConvertTo-HtmlTable
                 $resultXml = [xml]$result

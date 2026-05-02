@@ -54,6 +54,9 @@ namespace HtmlReportingSharp
         public Hashtable RenameHeader { get; set; }
 
         [Parameter()]
+        public Hashtable ColumnClass { get; set; }
+
+        [Parameter()]
         public string[] RightAlignProperty { get; set; }
 
         [Parameter()]
@@ -175,6 +178,11 @@ namespace HtmlReportingSharp
                     if (RenameHeader[key] != null)
                         renameHeaderDict[key.ToString()] = RenameHeader[key].ToString();
 
+            var columnClassFlattened = new Dictionary<string, string[]>();
+            if (ColumnClass != null)
+                foreach (object key in ColumnClass.Keys)
+                    columnClassFlattened[key.ToString()] = Helpers.ConvertObjectToStringArray(ColumnClass[key]);
+
             var lineClassDict = new Dictionary<string,string>();
             if (InsertSolidLine != null)
                 foreach (string p in InsertSolidLine)
@@ -203,11 +211,16 @@ namespace HtmlReportingSharp
                 resultBuilder.Append("<tr class='header'>\r\n");
                 foreach (string header in headerList)
                 {
+                    var headerClasses = new List<string>();
+                    if (lineClassDict.ContainsKey(header))
+                        headerClasses.Add(string.Format("Insert{0}Line", lineClassDict[header]));
+                    if (columnClassFlattened.ContainsKey(header))
+                        headerClasses.AddRange(columnClassFlattened[header]);
                     resultBuilder.Append("<th");
                     if (AddDataColumnName.IsPresent)
                         resultBuilder.AppendFormat(" data-column-name='{0}'", System.Web.HttpUtility.HtmlAttributeEncode(header));
-                    if (lineClassDict.ContainsKey(header))
-                        resultBuilder.AppendFormat(" class='Insert{0}Line'", lineClassDict[header]);
+                    if (headerClasses.Count > 0)
+                        resultBuilder.AppendFormat(" class='{0}'", String.Join(" ", headerClasses));
                     if (renameHeaderDict.ContainsKey(header))
                         resultBuilder.Append(String.Format(">{0}</th>\r\n", renameHeaderDict[header]));
                     else
@@ -286,6 +299,9 @@ namespace HtmlReportingSharp
 
                     if (cellClassDict.ContainsKey(header))
                         cellClassList.AddRange(cellClassDict[header]);
+
+                    if (columnClassFlattened.ContainsKey(header))
+                        cellClassList.AddRange(columnClassFlattened[header]);
 
                     if (cellStyleDict.ContainsKey(header))
                         cellStyleList.AddRange(cellStyleDict[header]);
