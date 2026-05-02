@@ -1,7 +1,7 @@
 try
 {
     if ($Global:2e128b9186234521b3ab5ce70cc83360_ForceLoadPowerShellCmdlets -eq $true) { throw "Skipping HtmlReportingSharp Compilation" }
-    $date = "20220825_v001"
+    $date = "20260501_v003"
     $Script:OutputPath = "$Env:LOCALAPPDATA\Rhodium\Module\HtmlReportingSharp_$date\HtmlReportingSharp.dll"
     if (![System.IO.File]::Exists($outputPath))
     {
@@ -348,6 +348,7 @@ Function ConvertTo-HtmlTable
         [Parameter()] [hashtable] $CellColspanScripts = @{},
         [Parameter()] [hashtable] $CellRowspanScripts = @{},
         [Parameter()] [hashtable] $RenameHeader = @{},
+        [Parameter()] [hashtable] $ColumnClass = @{},
         [Parameter()] [string[]] $RightAlignProperty,
         [Parameter()] [string[]] $NoWrapProperty,
         [Parameter()] [switch] $Plain,
@@ -370,6 +371,17 @@ Function ConvertTo-HtmlTable
     }
     End
     {
+        $noWrapPropertyAll = '*' -in $NoWrapProperty
+        $usesColumnClass = $PSBoundParameters.ContainsKey('ColumnClass')
+        if ($usesColumnClass)
+        {
+            $columnClassFlattened = @{}
+            foreach ($pair in $ColumnClass.GetEnumerator())
+            {
+                $columnClassFlattened[$pair.Key] = $pair.Value -join ' '
+            }
+        }
+
         $resultList = [System.Collections.Generic.List[string]]::new()
         $headerList = [System.Collections.Generic.List[string]]::new()
         if (-not $Property)
@@ -403,9 +415,13 @@ Function ConvertTo-HtmlTable
             [void]$sb.Append("<tr class='header'>`r`n")
             foreach ($header in $headerList)
             {
+                $headerClasses = @(
+                    if ($lineClassDict[$header]) { "Insert$($lineClassDict[$header])Line" }
+                    if ($usesColumnClass -and $columnClassFlattened[$header]) { $columnClassFlattened[$header] }
+                )
                 [void]$sb.Append("<th")
                 if ($AddDataColumnName) { [void]$sb.AppendFormat(" data-column-name='{0}'", [System.Web.HttpUtility]::HtmlAttributeEncode($header)) }
-                if ($lineClassDict[$header]) { [void]$sb.Append(" class='Insert$($lineClassDict[$header])Line'") }
+                if ($headerClasses.Count -gt 0) { [void]$sb.AppendFormat(" class='{0}'", $headerClasses -join ' ') }
                 if ($RenameHeader[$header]) { $header = $RenameHeader[$header] }
                 [void]$sb.Append(">$header</th>`r`n")
             }
@@ -484,6 +500,7 @@ Function ConvertTo-HtmlTable
 
                 foreach ($value in $cellClassDict[$header]) { $cellClassList.Add($value) }
                 foreach ($value in $cellStyleDict[$header]) { $cellStyleList.Add($value) }
+                if ($usesColumnClass -and $columnClassFlattened[$header]) { $cellClassList.Add($columnClassFlattened[$header]) }
 
                 if ($lineClassDict[$header]) { $cellClassList.Add("Insert$($lineClassDict[$header])Line") }
 
@@ -495,7 +512,7 @@ Function ConvertTo-HtmlTable
                 }
 
                 if ($header -in $RightAlignProperty) { $cellClassList.Add('ralign') }
-                if ($header -in $NoWrapProperty) { $cellClassList.Add('nowrap') }
+                if ($noWrapPropertyAll -or ($header -in $NoWrapProperty)) { $cellClassList.Add('nowrap') }
 
                 $classHtml = ''
                 $styleHtml = ''
